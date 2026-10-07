@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Combat Gym
 
-## Getting Started
+Learn boxing from home: short daily sessions, real scores, XP, levels and an honest coach.
+Boxing is the MVP. Kickboxing, Wrestling and MMA are designed in but locked.
 
-First, run the development server:
+## Run it on your computer
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+1. Install Node.js 20 or newer from nodejs.org.
+2. Open a terminal in this folder and run `npm install`.
+3. Run `npm run dev` and open http://localhost:3000.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Check it
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `npm test` runs the game-rule tests.
+- `npm run typecheck` and `npm run lint` check the code.
+- `npm run build` makes a production build.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Where things live
 
-## Learn More
+| Folder | What is inside |
+| --- | --- |
+| `src/content/` | What we teach: sports, Boxing levels, lessons, drills, opponents, achievements, safety copy. Edit this to change content. |
+| `src/domain/` | Game rules: XP, levels, skills, streaks, daily session builder, coach rules, onboarding. No screens. |
+| `src/services/` | Outside world: saving progress, analytics events, coach service, future camera analysis. |
+| `src/app/` | Screens. Phase 1 has a placeholder home; Phase 2 builds the real UI. |
+| `tests/` | Checks for the game rules. |
 
-To learn more about Next.js, take a look at the following resources:
+## Honest scoring
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Without a camera the app scores only what a phone can measure: Reaction, Combo Recall, Fight IQ,
+Knowledge, Consistency and Conditioning. Technique, Accuracy and Footwork stay locked until camera
+coaching exists. See `src/services/vision/pose-analyzer.ts`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Secrets
 
-## Deploy on Vercel
+Copy `.env.example` to `.env.local`. Never commit real keys. Server-only keys never start with `NEXT_PUBLIC_`.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Safety
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Lesson content is a draft and must be reviewed by a qualified boxing coach before public launch.
