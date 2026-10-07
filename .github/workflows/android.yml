@@ -57,7 +57,16 @@ jobs:
 
       - name: Build test APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: |
+          set -o pipefail
+          ./gradlew assembleDebug --stacktrace 2>&1 | tee "$RUNNER_TEMP/gradle.log" || {
+            # Surface the cause as an annotation, which is readable without downloading the full log.
+            reason=$(sed -n '/What went wrong/,/Try:/p' "$RUNNER_TEMP/gradle.log" | head -40)
+            [ -z "$reason" ] && reason=$(grep -iE "error|exception" "$RUNNER_TEMP/gradle.log" | head -40)
+            reason="${reason//'%'/'%25'}"; reason="${reason//$'\n'/'%0A'}"; reason="${reason//$'\r'/'%0D'}"
+            echo "::error title=Android build failed::$reason"
+            exit 1
+          }
 
       - name: Upload test APK
         uses: actions/upload-artifact@v4
