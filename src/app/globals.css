@@ -4,21 +4,36 @@
 :root {
   --background: #0b0d10;
   --surface: #151920;
+  --surface-2: #1f252e;
+  --surface-3: #29303b;
   --foreground: #f2f4f7;
-  --muted: #8b95a5;
+  --muted: #8f99a8;
   --accent: #ff4d2e;
+  --good: #3ddc84;
+  --danger: #ff6b6b;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-accent: var(--accent);
+  --color-good: var(--good);
+  --color-danger: var(--danger);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
 }

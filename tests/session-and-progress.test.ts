@@ -96,3 +96,13 @@ describe("applying a session", () => {
     expect(out.coach.tone).toBe("safety");
   });
 });
+
+describe("punch drills", () => {
+  it("use movement until the jab lesson is done", () => {
+    const base = { date: "2026-10-07", minutes: 30, totalXp: 400, skills: emptySkills() };
+    const before = buildDailySession({ ...base, completedLessonIds: ["boxing-stance"] });
+    expect(before.blocks.some((b) => b.drillId === "shadow-punches")).toBe(false);
+    const after = buildDailySession({ ...base, completedLessonIds: ["boxing-stance", "boxing-jab"] });
+    expect(after.blocks.some((b) => b.drillId === "shadow-punches")).toBe(true);
+  });
+});

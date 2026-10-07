@@ -1,6 +1,6 @@
 import { BOXING_DRILLS } from "@/content/boxing/drills";
 import { getLesson } from "@/content/boxing/lessons";
-import { nextLessonId } from "./curriculum";
+import { knowsPunches, nextLessonId } from "./curriculum";
 import { weakestSkill } from "./skills";
 import type { Drill, MeasuredSkill, SessionBlock, SkillRatings, TrainingSessionPlan } from "./types";
 
@@ -45,14 +45,15 @@ export function buildDailySession(input: SessionInput): TrainingSessionPlan {
   const focus = weakestSkill(input.skills);
   const lessonId = nextLessonId(input.totalXp, input.completedLessonIds);
   const lesson = lessonId ? getLesson(lessonId) : undefined;
-  const hasPunchLessons = input.totalXp >= 300; // Level 2 unlocked
+  const hasPunchLessons = knowsPunches(input.completedLessonIds);
 
   // Candidate blocks in priority order. Each is added only if it fits the remaining time.
   const candidates: SessionBlock[] = [];
   if (lesson) {
     candidates.push({ type: "learn", title: lesson.title, minutes: lesson.minutes, lessonId: lesson.id });
   }
-  const focusDrill = drill(DRILL_FOR_SKILL[focus]);
+  const focusDrillId = focus === "conditioning" && !hasPunchLessons ? "shadow-fundamentals" : DRILL_FOR_SKILL[focus];
+  const focusDrill = drill(focusDrillId);
   candidates.push({ type: "test", title: focusDrill.title, minutes: focusDrill.minutes, drillId: focusDrill.id });
 
   const practice = drill(hasPunchLessons ? "shadow-punches" : "shadow-fundamentals");

@@ -91,6 +91,7 @@ export interface CurriculumLevel {
 // ---------- Drills (the scored part of training) ----------
 
 export type DrillKind =
+  | "lesson" // the LEARN step: reading a lesson, no score
   | "warmup" // timed, follow-along, safety-led
   | "shadowRound" // timed follow-along with spoken callouts; completion only
   | "reaction" // tap the right defense/punch when a callout flashes

@@ -19,6 +19,11 @@ export function nextLessonId(
   return null;
 }
 
+/** Punch drills and callouts start once the player has learned the jab. */
+export function knowsPunches(completedLessonIds: string[]): boolean {
+  return completedLessonIds.includes("boxing-jab");
+}
+
 export function isLevelComplete(level: CurriculumLevel, completedLessonIds: string[]): boolean {
   return level.contentReady && level.lessonIds.length > 0 && level.lessonIds.every((id) => completedLessonIds.includes(id));
 }

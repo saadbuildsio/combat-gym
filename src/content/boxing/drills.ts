@@ -35,8 +35,8 @@ export const BOXING_DRILLS: Drill[] = [
   {
     id: "reaction-punch-numbers",
     kind: "reaction",
-    title: "Number Reaction",
-    description: "A number flashes. Tap the matching punch as fast as you can.",
+    title: "Quick Reaction",
+    description: "A cue flashes. Tap the matching button as fast as you can.",
     minutes: 2,
     lessonIds: ["boxing-jab", "boxing-cross", "boxing-lead-hook"],
     trains: ["reaction"],

@@ -1,45 +1,133 @@
+"use client";
+
+import Link from "next/link";
+import { AppShell } from "@/components/app-shell";
+import { SessionBlocksList } from "@/components/session-blocks-list";
+import { ButtonLink, Card, Pill, ProgressBar, SectionTitle, StatBar } from "@/components/ui";
 import { SPORTS } from "@/content/sports";
-import { BOXING_LEVELS } from "@/content/boxing/levels";
-import { SAFETY_DISCLAIMER } from "@/content/safety";
+import { homeCoachLine } from "@/domain/coach-rules";
+import { missionsFor } from "@/domain/missions";
+import { SKILL_LABELS } from "@/domain/skills";
+import { visibleStreak } from "@/domain/streak";
+import { CAMERA_SKILLS, MEASURED_SKILLS, type PlayerProfile } from "@/domain/types";
+import { levelProgress } from "@/domain/xp";
+import { todayKey, todaysPlan } from "@/lib/today";
+import { track } from "@/services/analytics/events";
 
-/**
- * Phase 1 placeholder: proves content and architecture are wired together.
- * The real Home dashboard is designed and built in Phase 2.
- */
-export default function Home() {
+const CAMERA_LABELS = { technique: "Technique", accuracy: "Accuracy", footwork: "Footwork", defenseForm: "Defense form" };
+
+export default function HomePage() {
+  return <AppShell>{(profile) => <Dashboard profile={profile} />}</AppShell>;
+}
+
+function Dashboard({ profile }: { profile: PlayerProfile }) {
+  const today = todayKey();
+  const plan = todaysPlan(profile, today);
+  const streak = visibleStreak(profile.streak, today);
+  const level = levelProgress(profile.totalXp);
+  const trainedToday = profile.history.some((s) => s.date === today);
+  const missions = missionsFor(profile.history, today).filter((m) => m.period === "daily");
+
   return (
-    <main className="mx-auto max-w-xl px-4 py-10">
-      <p className="text-sm font-semibold uppercase tracking-widest text-accent">Combat Gym</p>
-      <h1 className="mt-2 text-3xl font-black">Learn to box from home.</h1>
-      <p className="mt-2 text-muted">Phase 1 build: architecture and content. The full dashboard arrives in Phase 2.</p>
+    <div className="space-y-5">
+      <div className="flex items-end justify-between">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted">Welcome back</p>
+          <h1 className="text-3xl font-black">{profile.displayName}</h1>
+        </div>
+        <Pill tone={streak > 0 ? "accent" : "muted"}>🔥 {streak} day streak</Pill>
+      </div>
 
-      <h2 className="mt-8 text-lg font-bold">Sports</h2>
-      <ul className="mt-3 grid grid-cols-2 gap-3">
-        {SPORTS.map((sport) => (
-          <li key={sport.id} className="rounded-xl bg-surface p-4">
-            <p className="text-2xl" aria-hidden>{sport.emoji}</p>
-            <p className="mt-1 font-bold">{sport.name}</p>
-            <p className={sport.status === "available" ? "text-sm text-accent" : "text-sm text-muted"}>
-              {sport.status === "available" ? "Available" : "Coming soon"}
-            </p>
-          </li>
-        ))}
-      </ul>
+      {/* Primary action: what to do today */}
+      <Card className="border border-accent/30 bg-gradient-to-br from-accent/15 to-surface">
+        <SectionTitle>{trainedToday ? "Train again" : "Today's training"}</SectionTitle>
+        <div className="mt-2 flex items-baseline justify-between">
+          <h2 className="text-2xl font-black">🥊 Boxing</h2>
+          <span className="text-muted">{plan.totalMinutes} min</span>
+        </div>
+        <div className="mt-4">
+          <SessionBlocksList blocks={plan.blocks} />
+        </div>
+        <ButtonLink href="/train/session" className="mt-5 w-full text-lg">
+          Start training
+        </ButtonLink>
+      </Card>
 
-      <h2 className="mt-8 text-lg font-bold">Boxing path</h2>
-      <ol className="mt-3 space-y-2">
-        {BOXING_LEVELS.map((level) => (
-          <li key={level.level} className="flex items-center justify-between rounded-xl bg-surface p-4">
-            <div>
-              <p className="font-bold">Level {level.level}: {level.title}</p>
-              <p className="text-sm text-muted">{level.goal}</p>
-            </div>
-            <span className="text-sm text-muted">{level.contentReady ? `${level.lessonIds.length} lessons` : "Locked"}</span>
-          </li>
-        ))}
-      </ol>
+      <Card>
+        <SectionTitle>AI coach</SectionTitle>
+        <p className="mt-2 text-lg">&ldquo;{homeCoachLine(profile.skills, profile.history.length)}&rdquo;</p>
+      </Card>
 
-      <p className="mt-10 text-xs text-muted">{SAFETY_DISCLAIMER}</p>
-    </main>
+      <div className="grid gap-5 md:grid-cols-2">
+        <Card>
+          <div className="flex items-baseline justify-between">
+            <SectionTitle>Level {level.level}</SectionTitle>
+            <span className="text-sm font-bold text-accent">{level.title}</span>
+          </div>
+          <ProgressBar value={level.xpIntoLevel} max={level.xpForNextLevel} className="mt-3" />
+          <p className="mt-2 text-sm text-muted">
+            {level.xpIntoLevel.toLocaleString()} / {level.xpForNextLevel.toLocaleString()} XP to level {level.level + 1}
+          </p>
+        </Card>
+
+        <Card>
+          <div className="flex items-baseline justify-between">
+            <SectionTitle>Daily missions</SectionTitle>
+            <Link href="/challenges" className="text-sm font-semibold text-accent">
+              All
+            </Link>
+          </div>
+          <ul className="mt-3 space-y-2 text-sm">
+            {missions.map((m) => (
+              <li key={m.id} className="flex items-center justify-between">
+                <span className={m.done ? "text-muted line-through" : ""}>{m.title}</span>
+                <span className="tabular-nums text-muted">{m.done ? "✓" : `${m.progress}/${m.target}`}</span>
+              </li>
+            ))}
+          </ul>
+        </Card>
+      </div>
+
+      <Card>
+        <div className="flex items-baseline justify-between">
+          <SectionTitle>Your skills</SectionTitle>
+          <Link href="/progress" className="text-sm font-semibold text-accent">
+            View progress
+          </Link>
+        </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {MEASURED_SKILLS.map((s) => (
+            <StatBar key={s} label={SKILL_LABELS[s]} value={profile.skills[s]} />
+          ))}
+          {CAMERA_SKILLS.map((s) => (
+            <StatBar key={s} label={CAMERA_LABELS[s]} value={0} locked />
+          ))}
+        </div>
+        <p className="mt-4 text-xs text-muted">Locked skills need camera coaching, which is coming later. We only score what we can measure.</p>
+      </Card>
+
+      <Card>
+        <SectionTitle>Sports</SectionTitle>
+        <div className="mt-3 grid grid-cols-2 gap-3 md:grid-cols-4">
+          {SPORTS.map((sport) => {
+            const available = sport.status === "available";
+            return (
+              <button
+                key={sport.id}
+                type="button"
+                className={`rounded-xl p-4 text-left ${available ? "bg-accent/15" : "bg-surface-2 opacity-70"}`}
+                onClick={() => !available && track("locked_sport_tapped", { sport: sport.id })}
+              >
+                <span className="text-2xl" aria-hidden>
+                  {sport.emoji}
+                </span>
+                <span className="mt-1 block font-bold">{sport.name}</span>
+                <span className={`text-xs ${available ? "text-accent" : "text-muted"}`}>{available ? "✓ Available" : "🔒 Coming soon"}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+    </div>
   );
 }
