@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from "next";
+import { LanguageProvider } from "@/components/language-provider";
+import { LanguageGate } from "@/components/language-picker";
 import { ProfileProvider } from "@/components/profile-provider";
 import "./globals.css";
 
@@ -17,7 +19,11 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="en">
       <body className="antialiased">
-        <ProfileProvider>{children}</ProfileProvider>
+        <LanguageProvider>
+          <LanguageGate>
+            <ProfileProvider>{children}</ProfileProvider>
+          </LanguageGate>
+        </LanguageProvider>
       </body>
     </html>
   );

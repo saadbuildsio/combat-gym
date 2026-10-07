@@ -1,3 +1,4 @@
+import { placedLevelFor } from "@/domain/curriculum";
 import { buildStartingProgram } from "@/domain/onboarding";
 import { buildDailySession } from "@/domain/session-builder";
 import { toDateKey } from "@/domain/dates";
@@ -19,5 +20,6 @@ export function todaysPlan(profile: PlayerProfile, date = todayKey()): TrainingS
     totalXp: profile.totalXp,
     skills: profile.skills,
     completedLessonIds: profile.completedLessonIds,
+    placedLevel: placedLevelFor(profile.onboarding?.experience),
   });
 }

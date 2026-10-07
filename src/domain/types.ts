@@ -65,6 +65,10 @@ export interface DemoVideo {
   credit?: string;
   /** Only coach-reviewed clips are shown to users. */
   coachReviewed: boolean;
+  /** YouTube: second the actual training starts, after any intro. The video opens here and "Skip intro" jumps here. */
+  skipTo?: number;
+  /** Presenter, recorded when the video was chosen. Saad's rule: male coaches only. */
+  presenter?: "male";
 }
 
 // ---------- Curriculum ----------

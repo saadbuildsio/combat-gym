@@ -106,3 +106,19 @@ describe("punch drills", () => {
     expect(after.blocks.some((b) => b.drillId === "shadow-punches")).toBe(true);
   });
 });
+
+import { lockReason, unlockedLevels } from "@/domain/curriculum";
+
+describe("level unlocking", () => {
+  const level1 = BOXING_LEVELS[0].lessonIds;
+  it("needs the previous level finished as well as the XP", () => {
+    expect(unlockedLevels(5000, []).map((l) => l.level)).toEqual([1]);
+    expect(lockReason(BOXING_LEVELS[1], 5000, [])).toBe("finish_previous");
+    expect(unlockedLevels(0, level1).map((l) => l.level)).toEqual([1]);
+    expect(lockReason(BOXING_LEVELS[1], 0, level1)).toBe("need_xp");
+    expect(unlockedLevels(300, level1).map((l) => l.level)).toEqual([1, 2]);
+  });
+  it("opens Level 2 straight away for experienced players", () => {
+    expect(unlockedLevels(300, [], 2).map((l) => l.level)).toEqual([1, 2]);
+  });
+});

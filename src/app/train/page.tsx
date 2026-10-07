@@ -5,7 +5,7 @@ import { AppShell } from "@/components/app-shell";
 import { ButtonLink, Card, Pill, SectionTitle } from "@/components/ui";
 import { BOXING_LEVELS } from "@/content/boxing/levels";
 import { getLesson } from "@/content/boxing/lessons";
-import { isLevelComplete } from "@/domain/curriculum";
+import { isLevelComplete, lockReason, placedLevelFor } from "@/domain/curriculum";
 import type { PlayerProfile } from "@/domain/types";
 import { todaysPlan } from "@/lib/today";
 
@@ -46,7 +46,8 @@ function BoxingPath({ profile }: { profile: PlayerProfile }) {
 
       <ol className="space-y-4">
         {BOXING_LEVELS.map((level) => {
-          const unlocked = level.contentReady && profile.totalXp >= level.unlockXp;
+          const reason = lockReason(level, profile.totalXp, profile.completedLessonIds, placedLevelFor(profile.onboarding?.experience));
+          const unlocked = reason === null;
           const complete = isLevelComplete(level, profile.completedLessonIds);
           return (
             <li key={level.level}>
@@ -62,7 +63,13 @@ function BoxingPath({ profile }: { profile: PlayerProfile }) {
                   ) : unlocked ? (
                     <Pill tone="accent">Open</Pill>
                   ) : (
-                    <Pill>{level.contentReady ? `🔒 ${level.unlockXp.toLocaleString()} XP` : "🔒 Coming soon"}</Pill>
+                    <Pill>
+                      {reason === "coming_soon"
+                        ? "🔒 Coming soon"
+                        : reason === "finish_previous"
+                          ? `🔒 Finish Level ${level.level - 1}`
+                          : `🔒 ${level.unlockXp.toLocaleString()} XP`}
+                    </Pill>
                   )}
                 </div>
                 {unlocked && (

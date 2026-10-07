@@ -19,6 +19,8 @@ export interface SessionInput {
   totalXp: number;
   skills: SkillRatings;
   completedLessonIds: string[];
+  /** Level onboarding placed the player at (experienced players start at 2). */
+  placedLevel?: number;
   drills?: Drill[];
 }
 
@@ -43,7 +45,7 @@ export function buildDailySession(input: SessionInput): TrainingSessionPlan {
   const warmup = drill("warmup-basic");
   const cooldown = drill("cooldown-basic");
   const focus = weakestSkill(input.skills);
-  const lessonId = nextLessonId(input.totalXp, input.completedLessonIds);
+  const lessonId = nextLessonId(input.totalXp, input.completedLessonIds, input.placedLevel ?? 1);
   const lesson = lessonId ? getLesson(lessonId) : undefined;
   const hasPunchLessons = knowsPunches(input.completedLessonIds);
 
