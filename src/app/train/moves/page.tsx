@@ -9,8 +9,10 @@ import { localizeMove } from "@/content/localize";
 import type { MessageKey } from "@/i18n/messages/en";
 
 const GROUPS: { title: MessageKey; moves: MoveId[] }[] = [
-  { title: "moves.groupPunches", moves: ["jab", "cross", "lead-hook", "rear-hook", "lead-uppercut", "rear-uppercut"] },
-  { title: "moves.groupFootwork", moves: ["step-forward", "step-back", "step-left", "step-right"] },
+  { title: "moves.groupPunches", moves: ["jab", "cross", "lead-hook", "rear-hook", "lead-uppercut", "rear-uppercut", "body-jab", "body-cross", "body-hook"] },
+  { title: "moves.groupDefense", moves: ["block", "slip-left", "slip-right", "roll", "parry", "pull-back"] },
+  { title: "moves.groupFootwork", moves: ["step-forward", "step-back", "step-left", "step-right", "pivot"] },
+  { title: "moves.groupFightIq", moves: ["feint"] },
   { title: "moves.groupStance", moves: ["guard", "guard-check", "reset"] },
 ];
 

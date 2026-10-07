@@ -44,6 +44,9 @@ describe("finishSession", () => {
 
   it("unlocks the counter puncher at player level 2", () => {
     expect(availableOpponents(0).map((o) => o.id)).toEqual(["aggressor"]);
-    expect(availableOpponents(100).map((o) => o.id)).toEqual(["aggressor", "counter-puncher"]);
+    // Opponents open with their curriculum level, not with XP alone.
+    expect(availableOpponents(5000).map((o) => o.id)).toEqual(["aggressor"]);
+    const level1 = ["boxing-stance", "boxing-guard", "boxing-step-drag", "boxing-lateral"];
+    expect(availableOpponents(300, level1).map((o) => o.id)).toEqual(["aggressor", "counter-puncher"]);
   });
 });

@@ -180,6 +180,8 @@ export const en = {
   "moves.count": "{count} moves. Tap one to watch it.",
   "moves.slowMotion": "🐢 Slow motion",
   "moves.fullSpeed": "⚡ Full speed",
+  "moves.groupDefense": "Defense",
+  "moves.groupFightIq": "Fight IQ",
   "moves.groupPunches": "Punches",
   "moves.groupFootwork": "Footwork",
   "moves.groupStance": "Stance and guard",

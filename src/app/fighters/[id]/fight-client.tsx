@@ -8,6 +8,7 @@ import { useT } from "@/components/language-provider";
 import { useProfile } from "@/components/profile-provider";
 import { SessionResults } from "@/components/session-results";
 import { getOpponent } from "@/content/boxing/opponents";
+import { placedLevelFor } from "@/domain/curriculum";
 import { availableOpponents, finishSession } from "@/domain/finish-session";
 import type { SessionOutcome } from "@/domain/progress";
 import type { DrillResult, PlayerProfile, SkillRatings } from "@/domain/types";
@@ -27,7 +28,7 @@ function Fight({ opponentId, profile }: { opponentId: string; profile: PlayerPro
   const [skillsBefore] = useState<SkillRatings>(() => profile.skills);
   const [outcome, setOutcome] = useState<SessionOutcome | null>(null);
   const opponent = getOpponent(opponentId);
-  const allowed = availableOpponents(profile.totalXp).some((o) => o.id === opponentId);
+  const allowed = availableOpponents(profile.totalXp, profile.completedLessonIds, placedLevelFor(profile.onboarding?.experience)).some((o) => o.id === opponentId);
   const started = useRef(false);
 
   useEffect(() => {

@@ -168,6 +168,8 @@ export const roman: Messages = {
   "moves.count": "{count} moves. Dekhne ke liye kisi par tap karein.",
   "moves.slowMotion": "🐢 Slow motion",
   "moves.fullSpeed": "⚡ Poori speed",
+  "moves.groupDefense": "Defense (bachao)",
+  "moves.groupFightIq": "Fight IQ",
   "moves.groupPunches": "Punches",
   "moves.groupFootwork": "Footwork",
   "moves.groupStance": "Stance aur guard",

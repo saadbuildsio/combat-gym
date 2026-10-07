@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "./language-provider";
 import { GUARD_POSE, getMove, type MoveId, type MoveTrail } from "@/content/boxing/moves";
+import { localizeMove } from "@/content/localize";
 import { poseAt, timelineLength, type Keyframe, type Point, type Pose } from "@/domain/pose";
 
 /** Pause in guard between repeats of the whole move or combo. */
@@ -72,10 +74,13 @@ export function MoveAnimation({
     return () => cancelAnimationFrame(frameId);
   }, [timeline, slow, playKey]);
 
+  const { language } = useLanguage();
+  const moveText = (id: MoveId) => localizeMove(getMove(id), language);
   const ids = movesKey.split("|").filter(Boolean) as MoveId[];
   if (ids.length === 0) return null;
-  const current = getMove(ids[Math.max(0, state.active)]);
-  const names = ids.map((id) => getMove(id).name).join(", ");
+  const currentMove = getMove(ids[Math.max(0, state.active)]);
+  const current = moveText(currentMove.id);
+  const names = ids.map((id) => moveText(id).name).join(", ");
 
   return (
     <figure className={className}>
@@ -101,7 +106,7 @@ export function MoveAnimation({
                 i === state.active ? "bg-accent text-white" : "bg-surface-2 text-muted"
               }`}
             >
-              {getMove(id).name}
+              {moveText(id).name}
             </li>
           ))}
         </ol>

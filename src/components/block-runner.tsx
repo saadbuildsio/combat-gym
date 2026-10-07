@@ -4,8 +4,6 @@ import { Button } from "@/components/ui";
 import {
   COOLDOWN_STEPS,
   DIRECTION_OPTIONS,
-  MOVEMENT_CALLOUTS,
-  PUNCH_COMBOS,
   PUNCH_OPTIONS_ALL,
   PUNCH_OPTIONS_BASIC,
   WARMUP_STEPS,
@@ -14,7 +12,8 @@ import { getDrill } from "@/content/boxing/drills";
 import { BOXING_LESSONS, getLesson } from "@/content/boxing/lessons";
 import { BOXING_OPPONENTS, getOpponent } from "@/content/boxing/opponents";
 import { localizeLesson, localizeOpponent } from "@/content/localize";
-import { knowsPunches } from "@/domain/curriculum";
+import { knowsPunches, placedLevelFor } from "@/domain/curriculum";
+import { shadowRoundCallouts } from "@/content/boxing/round-callouts";
 import { opponentForSession } from "@/domain/finish-session";
 import { scoreFightIQ, scoreQuiz } from "@/domain/scoring";
 import type { DrillResult, PlayerProfile, SessionBlock } from "@/domain/types";
@@ -68,13 +67,13 @@ export function BlockRunner({
     case "cooldown":
       return <TimedRound {...props} drill={drill} callouts={COOLDOWN_STEPS} calloutEvery={20} randomOrder={false} scoreEffort={false} followVideo />;
     case "shadowRound": {
-      const usePunches = drill.id === "shadow-punches" && punches;
+      const round = shadowRoundCallouts(drill.id, profile.completedLessonIds);
       return (
         <TimedRound
           {...props}
           drill={drill}
-          callouts={usePunches ? PUNCH_COMBOS : MOVEMENT_CALLOUTS}
-          calloutEvery={usePunches ? 4 : 3}
+          callouts={round.callouts}
+          calloutEvery={round.every}
           randomOrder
           scoreEffort
         />
@@ -101,7 +100,7 @@ export function BlockRunner({
       );
     }
     case "fightIQ": {
-      const opponent = opponentForSession(profile.totalXp, profile.history.length);
+      const opponent = opponentForSession(profile.totalXp, profile.history.length, profile.completedLessonIds, placedLevelFor(profile.onboarding?.experience));
       return <FightIQMatch opponentId={opponent.id} drillId={drill.id} onDone={onDone} />;
     }
     default:
