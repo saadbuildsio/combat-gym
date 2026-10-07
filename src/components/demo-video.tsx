@@ -1,11 +1,30 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import { getDemoVideo } from "@/content/boxing/videos";
 
 /**
  * Shows the demo video for a lesson or drill.
  * With no video, shows a "coming soon" placeholder. Unreviewed YouTube placeholders carry a notice.
+ * When `playing` is given, the video follows it (the round's Start and Pause also play and pause the video).
  */
-export function DemoVideo({ id, title }: { id: string; title: string }) {
+export function DemoVideo({ id, title, playing, leads = false }: { id: string; title: string; playing?: boolean; leads?: boolean }) {
   const video = getDemoVideo(id);
+  const fileRef = useRef<HTMLVideoElement>(null);
+  const frameRef = useRef<HTMLIFrameElement>(null);
+
+  useEffect(() => {
+    if (playing === undefined) return;
+    if (fileRef.current) {
+      if (playing) fileRef.current.play().catch(() => {});
+      else fileRef.current.pause();
+    }
+    // YouTube's embed API takes play and pause commands by message. Some phones block remote play; the user can tap play.
+    frameRef.current?.contentWindow?.postMessage(
+      JSON.stringify({ event: "command", func: playing ? "playVideo" : "pauseVideo", args: [] }),
+      "https://www.youtube-nocookie.com",
+    );
+  }, [playing]);
 
   if (!video) {
     return (
@@ -24,6 +43,7 @@ export function DemoVideo({ id, title }: { id: string; title: string }) {
       <div className="aspect-video w-full overflow-hidden rounded-2xl bg-black">
         {video.kind === "file" ? (
           <video
+            ref={fileRef}
             className="h-full w-full object-contain"
             src={video.src}
             poster={video.poster}
@@ -36,18 +56,22 @@ export function DemoVideo({ id, title }: { id: string; title: string }) {
           />
         ) : (
           <iframe
+            ref={frameRef}
             className="h-full w-full"
-            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.src)}?rel=0&modestbranding=1`}
+            src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.src)}?rel=0&modestbranding=1&playsinline=1&enablejsapi=1`}
             title={`Demo: ${title}`}
             loading="lazy"
-            allow="encrypted-media; picture-in-picture"
+            allow="autoplay; encrypted-media; picture-in-picture"
             allowFullScreen
           />
         )}
       </div>
       <figcaption className="mt-1 text-xs text-muted">
         {video.credit && <>Video: {video.credit}. </>}
-        {!video.coachReviewed && "Not yet checked by a Combat Gym coach. If it differs from our written steps, follow the steps."}
+        {!video.coachReviewed &&
+          (leads
+            ? "Not yet checked by a Combat Gym coach. Go gently and stop if anything hurts."
+            : "Not yet checked by a Combat Gym coach. If it differs from our written steps, follow the steps.")}
       </figcaption>
     </figure>
   );

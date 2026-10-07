@@ -60,9 +60,9 @@ export function BlockRunner({
 
   switch (drill.kind) {
     case "warmup":
-      return <TimedRound {...props} drill={drill} callouts={WARMUP_STEPS} calloutEvery={20} randomOrder={false} scoreEffort={false} />;
+      return <TimedRound {...props} drill={drill} callouts={WARMUP_STEPS} calloutEvery={20} randomOrder={false} scoreEffort={false} followVideo />;
     case "cooldown":
-      return <TimedRound {...props} drill={drill} callouts={COOLDOWN_STEPS} calloutEvery={20} randomOrder={false} scoreEffort={false} />;
+      return <TimedRound {...props} drill={drill} callouts={COOLDOWN_STEPS} calloutEvery={20} randomOrder={false} scoreEffort={false} followVideo />;
     case "shadowRound": {
       const usePunches = drill.id === "shadow-punches" && punches;
       return (
