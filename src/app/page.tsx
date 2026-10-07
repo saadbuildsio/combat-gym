@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { AdBanner } from "@/components/ad-banner";
 import { AppShell } from "@/components/app-shell";
 import { useT } from "@/components/language-provider";
 import { SessionBlocksList } from "@/components/session-blocks-list";
@@ -147,6 +148,7 @@ function Dashboard({ profile }: { profile: PlayerProfile }) {
           })}
         </div>
       </Card>
+      <AdBanner placement="home" />
     </div>
   );
 }

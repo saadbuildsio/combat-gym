@@ -8,6 +8,7 @@ import type { SessionOutcome } from "@/domain/progress";
 import { SKILL_LABEL_KEYS } from "@/domain/skills";
 import { MEASURED_SKILLS, type SkillRatings } from "@/domain/types";
 import { levelProgress } from "@/domain/xp";
+import { AdBanner } from "./ad-banner";
 import { useLanguage } from "./language-provider";
 
 /** End-of-session screen: XP, skill changes, achievements and the coach's honest note. */
@@ -93,6 +94,8 @@ export function SessionResults({ outcome, skillsBefore }: { outcome: SessionOutc
           {t("common.viewProgress")}
         </ButtonLink>
       </div>
+      {/* No ad on the pain screen: that moment is about safety. */}
+      {coach.tone !== "safety" && <AdBanner placement="results" />}
     </div>
   );
 }

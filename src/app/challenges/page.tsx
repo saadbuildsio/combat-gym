@@ -1,5 +1,6 @@
 "use client";
 
+import { AdBanner } from "@/components/ad-banner";
 import { AppShell } from "@/components/app-shell";
 import { useT } from "@/components/language-provider";
 import { ButtonLink, Card, ProgressBar, SectionTitle } from "@/components/ui";
@@ -29,6 +30,7 @@ function Challenges({ profile }: { profile: PlayerProfile }) {
       <ButtonLink href="/train/session" className="w-full">
         {t("common.startTraining")}
       </ButtonLink>
+      <AdBanner placement="challenges" />
     </div>
   );
 }

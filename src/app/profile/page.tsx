@@ -2,9 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { AdBanner } from "@/components/ad-banner";
+import { usePlan } from "@/components/plan-provider";
+import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { LanguagePicker } from "@/components/language-picker";
-import { useLanguage } from "@/components/language-provider";
+import { useLanguage, useT } from "@/components/language-provider";
 import { useProfile } from "@/components/profile-provider";
 import { Button, Card, Pill, SectionTitle } from "@/components/ui";
 import { ACHIEVEMENTS } from "@/content/achievements";
@@ -45,6 +48,8 @@ function Profile({ profile }: { profile: PlayerProfile }) {
           </div>
         </div>
       </Card>
+
+      <ProCard />
 
       <Card>
         <SectionTitle>{t("language.setting")}</SectionTitle>
@@ -105,7 +110,30 @@ function Profile({ profile }: { profile: PlayerProfile }) {
             {t("profile.reset")}
           </Button>
         )}
+        <p className="mt-4 text-xs">
+          <Link href="/privacy" className="text-muted underline">
+            {t("privacy.link")}
+          </Link>
+        </p>
       </Card>
+      <AdBanner placement="profile" />
     </div>
+  );
+}
+
+/** Free: invite to Pro. Pro: show it is active. */
+function ProCard() {
+  const t = useT();
+  const { plan } = usePlan();
+  return (
+    <Link href="/pro" className="flex items-center justify-between rounded-2xl border border-accent/40 bg-accent/10 p-5">
+      <span>
+        <span className="block text-lg font-black">{plan === "pro" ? t("pro.youArePro") : t("pro.cardTitle")}</span>
+        <span className="text-sm text-muted">{plan === "pro" ? t("pro.cardActive") : t("pro.cardBody")}</span>
+      </span>
+      <span aria-hidden className="text-2xl text-muted">
+        ›
+      </span>
+    </Link>
   );
 }

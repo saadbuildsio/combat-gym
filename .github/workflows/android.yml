@@ -1,0 +1,85 @@
+# Builds the Combat Gym Android app on every push to main (and on demand).
+# Output: a test APK you can install on a phone, and, once signing secrets exist, the AAB to upload to Google Play.
+#
+# Settings live in GitHub → Settings → Secrets and variables → Actions:
+#   Variables (not secret, they ship inside the app):
+#     ADMOB_APP_ID, NEXT_PUBLIC_ADMOB_BANNER_ID, NEXT_PUBLIC_ADMOB_INTERSTITIAL_ID, NEXT_PUBLIC_REVENUECAT_ANDROID_KEY
+#     (left empty, Google's test ads are used and Pro shows "coming soon")
+#   Secrets (for the Google Play upload file only):
+#     ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+name: Android app
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      ADMOB_APP_ID: ${{ vars.ADMOB_APP_ID }}
+      NEXT_PUBLIC_ADMOB_BANNER_ID: ${{ vars.NEXT_PUBLIC_ADMOB_BANNER_ID }}
+      NEXT_PUBLIC_ADMOB_INTERSTITIAL_ID: ${{ vars.NEXT_PUBLIC_ADMOB_INTERSTITIAL_ID }}
+      NEXT_PUBLIC_REVENUECAT_ANDROID_KEY: ${{ vars.NEXT_PUBLIC_REVENUECAT_ANDROID_KEY }}
+      VERSION_CODE: ${{ github.run_number }}
+      VERSION_NAME: 1.0.${{ github.run_number }}
+      # Secrets cannot be read in step conditions, so expose only whether signing is set up.
+      HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Install
+        run: npm ci
+
+      - name: Check
+        run: |
+          npm run typecheck
+          npm run lint
+          npm test
+
+      - name: Build the app screens
+        run: npm run build
+
+      - name: Copy them into the Android project
+        run: npx cap sync android
+
+      - name: Build test APK
+        working-directory: android
+        run: ./gradlew assembleDebug
+
+      - name: Upload test APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: combat-gym-test-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Build Google Play bundle
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        working-directory: android
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > "$RUNNER_TEMP/release.keystore"
+          ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/release.keystore" ./gradlew bundleRelease
+
+      - name: Upload Google Play bundle
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: combat-gym-play-bundle
+          path: android/app/build/outputs/bundle/release/app-release.aab

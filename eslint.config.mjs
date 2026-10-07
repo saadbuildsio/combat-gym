@@ -18,6 +18,8 @@ const eslintConfig = [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Android project: generated native code and a copy of out/.
+      "android/**",
     ],
   },
 ];

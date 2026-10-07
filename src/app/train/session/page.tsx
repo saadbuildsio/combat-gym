@@ -6,6 +6,8 @@ import { BlockRunner } from "@/components/block-runner";
 import { useLanguage } from "@/components/language-provider";
 import { useProfile } from "@/components/profile-provider";
 import { SessionResults } from "@/components/session-results";
+import { usePlan } from "@/components/plan-provider";
+import { maybeShowSessionInterstitial } from "@/lib/interstitial";
 import { AppShell } from "@/components/app-shell";
 import { ProgressBar } from "@/components/ui";
 import { localizeSafety } from "@/content/localize";
@@ -24,6 +26,7 @@ export default function SessionPage() {
 function SessionPlayer({ profile }: { profile: PlayerProfile }) {
   const { saveProfile } = useProfile();
   const { language, t } = useLanguage();
+  const { plan: subscription } = usePlan();
   const [plan] = useState<TrainingSessionPlan>(() => todaysPlan(profile));
   const [skillsBefore] = useState<SkillRatings>(() => profile.skills);
   const [index, setIndex] = useState(0);
@@ -45,6 +48,8 @@ function SessionPlayer({ profile }: { profile: PlayerProfile }) {
     await saveProfile(result.profile);
     setOutcome(result);
     window.scrollTo({ top: 0 });
+    // Free plan only, never in the first sessions, never after a pain report.
+    void maybeShowSessionInterstitial({ plan: subscription, sessionsCompleted: result.profile.history.length, reportedPain: pain });
 
     track(pain ? "training_stopped_pain" : "training_completed", { xp: result.xpEarned, blocks: blocks.length });
     completedLessonIds.forEach((id) => track("lesson_completed", { lesson: id }));

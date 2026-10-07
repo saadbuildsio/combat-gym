@@ -21,7 +21,11 @@ export type AnalyticsEvent =
   | "level_up"
   | "achievement_unlocked"
   | "locked_sport_tapped"
-  | "subscription_started";
+  | "subscription_started"
+  | "pro_screen_viewed"
+  | "pro_purchase_started"
+  | "pro_purchased"
+  | "ad_interstitial_shown";
 
 export type EventProperties = Record<string, string | number | boolean | null>;
 

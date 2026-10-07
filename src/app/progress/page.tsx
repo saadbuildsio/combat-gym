@@ -1,5 +1,6 @@
 "use client";
 
+import { AdBanner } from "@/components/ad-banner";
 import { AppShell } from "@/components/app-shell";
 import { useT } from "@/components/language-provider";
 import { Card, ProgressBar, SectionTitle, StatBar } from "@/components/ui";
@@ -88,6 +89,7 @@ function Progress({ profile }: { profile: PlayerProfile }) {
           </ul>
         )}
       </Card>
+      <AdBanner placement="progress" />
     </div>
   );
 }

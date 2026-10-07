@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { LANGUAGES } from "@/i18n/language";
 import { useLanguage } from "./language-provider";
 
@@ -33,7 +34,9 @@ export function LanguagePicker({ onPicked }: { onPicked?: () => void }) {
 /** Full-screen first step for a new device: pick a language before anything else. */
 export function LanguageGate({ children }: { children: React.ReactNode }) {
   const { chosen } = useLanguage();
-  if (chosen) return <>{children}</>;
+  const pathname = usePathname();
+  // The privacy policy must open straight away for store reviewers and visitors.
+  if (chosen || pathname?.startsWith("/privacy")) return <>{children}</>;
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col justify-center px-4 py-10">
       <p className="text-sm font-black tracking-tight">
