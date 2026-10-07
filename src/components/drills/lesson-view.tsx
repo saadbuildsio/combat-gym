@@ -1,4 +1,5 @@
 import type { Lesson } from "@/domain/types";
+import { DemoVideo } from "../demo-video";
 
 /** The LEARN step: what it is, when to use it, how to do it, mistakes to avoid, safety. */
 export function LessonView({ lesson }: { lesson: Lesson }) {
@@ -9,6 +10,7 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
         <h2 className="mt-1 text-3xl font-black">{lesson.title}</h2>
         <p className="mt-2 text-lg">{lesson.whatItIs}</p>
       </div>
+      <DemoVideo id={lesson.id} title={lesson.title} />
       <Section title="When to use it">
         <p>{lesson.whenToUse}</p>
       </Section>

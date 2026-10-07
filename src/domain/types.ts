@@ -48,6 +48,25 @@ export const MEASURED_SKILLS: MeasuredSkill[] = [
 
 export const CAMERA_SKILLS: CameraSkill[] = ["technique", "accuracy", "footwork", "defenseForm"];
 
+// ---------- Media ----------
+
+/**
+ * A short demonstration video for a lesson or drill.
+ * "file": a clip in /public/videos (fast, no ads, works offline once cached).
+ * "youtube": a video ID played through YouTube's privacy-enhanced player.
+ */
+export interface DemoVideo {
+  kind: "file" | "youtube";
+  /** File path such as "/videos/jab.mp4", or the YouTube video ID. */
+  src: string;
+  /** Optional still image shown before the video plays. */
+  poster?: string;
+  /** Who made or owns the clip. */
+  credit?: string;
+  /** Only coach-reviewed clips are shown to users. */
+  coachReviewed: boolean;
+}
+
 // ---------- Curriculum ----------
 
 export interface Lesson {

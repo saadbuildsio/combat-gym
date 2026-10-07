@@ -6,6 +6,7 @@ import { scoreConditioning } from "@/domain/scoring";
 import type { Drill } from "@/domain/types";
 import { speak, stopSpeaking } from "@/lib/speech";
 import type { DrillProps } from "./types";
+import { DemoVideo } from "../demo-video";
 
 interface TimedRoundProps extends DrillProps {
   drill: Drill;
@@ -109,6 +110,12 @@ export function TimedRound({ drill, callouts, calloutEvery, randomOrder, scoreEf
   return (
     <div className="text-center">
       <p className="text-sm text-muted">{drill.description}</p>
+      {/* Show the demo before the round starts; hide it while training so the timer stays in view. */}
+      {!running && elapsed === 0 && (
+        <div className="mt-4">
+          <DemoVideo id={drill.id} title={drill.title} />
+        </div>
+      )}
       <p className="mt-6 font-mono text-6xl font-black tabular-nums" aria-live="off">
         {mm}:{ss}
       </p>
