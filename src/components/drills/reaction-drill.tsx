@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, ProgressBar } from "@/components/ui";
 import { DIRECTION_NAMES } from "@/content/boxing/callouts";
+import { localizeDrill, localizePhrase } from "@/content/localize";
 import { scoreReaction } from "@/domain/scoring";
 import type { Drill } from "@/domain/types";
+import { useLanguage } from "../language-provider";
 import { pick, type DrillProps } from "./types";
 
 const PROMPTS = 8;
@@ -17,6 +19,7 @@ type Phase = "intro" | "waiting" | "prompt" | "feedback" | "done";
  * Measures real reaction time in milliseconds on correct taps.
  */
 export function ReactionDrill({ drill, options, onDone }: DrillProps & { drill: Drill; options: string[] }) {
+  const { language, t } = useLanguage();
   const [phase, setPhase] = useState<Phase>("intro");
   const [round, setRound] = useState(0);
   const [cue, setCue] = useState("");
@@ -58,7 +61,7 @@ export function ReactionDrill({ drill, options, onDone }: DrillProps & { drill: 
         setCue(pick(options));
         shownAt.current = performance.now();
         setPhase("prompt");
-        timer.current = setTimeout(() => showFeedback("Too slow", nextRound), TIMEOUT_MS);
+        timer.current = setTimeout(() => showFeedback(t("reaction.tooSlow"), nextRound), TIMEOUT_MS);
       },
       700 + Math.random() * 1300,
     );
@@ -73,26 +76,26 @@ export function ReactionDrill({ drill, options, onDone }: DrillProps & { drill: 
 
   const tap = (option: string) => {
     if (phase === "waiting") {
-      showFeedback("Too early. Wait for the cue.", round);
+      showFeedback(t("reaction.tooEarly"), round);
       return;
     }
     if (phase !== "prompt") return;
     const ms = Math.round(performance.now() - shownAt.current);
     if (option === cue) {
       times.current.push(ms);
-      showFeedback(`${ms} ms`, round);
+      showFeedback(t("reaction.ms", { ms }), round);
     } else {
-      showFeedback("Wrong one", round);
+      showFeedback(t("reaction.wrong"), round);
     }
   };
 
   if (phase === "intro") {
     return (
       <div className="text-center">
-        <p className="text-muted">{drill.description}</p>
-        <p className="mt-4 text-sm text-muted">{PROMPTS} cues. Tap the matching button as fast as you can. Do not tap before the cue appears.</p>
+        <p className="text-muted">{localizeDrill(drill, language).description}</p>
+        <p className="mt-4 text-sm text-muted">{t("reaction.intro", { count: PROMPTS })}</p>
         <Button className="mt-8 w-full" onClick={() => next(0)}>
-          Start
+          {t("common.start")}
         </Button>
       </div>
     );
@@ -102,11 +105,11 @@ export function ReactionDrill({ drill, options, onDone }: DrillProps & { drill: 
     <div className="text-center">
       <ProgressBar value={round} max={PROMPTS} />
       <div className="mt-8 flex h-40 items-center justify-center rounded-2xl bg-surface-2" aria-live="assertive">
-        {phase === "waiting" && <span className="text-muted">Wait for it…</span>}
+        {phase === "waiting" && <span className="text-muted">{t("reaction.wait")}</span>}
         {phase === "prompt" && (
           <span className="text-7xl font-black text-accent">
             {cue}
-            {DIRECTION_NAMES[cue] && <span className="block text-base text-muted">{DIRECTION_NAMES[cue]}</span>}
+            {DIRECTION_NAMES[cue] && <span className="block text-base text-muted">{localizePhrase(DIRECTION_NAMES[cue], language)}</span>}
           </span>
         )}
         {phase === "feedback" && <span className="text-2xl font-bold">{feedback}</span>}

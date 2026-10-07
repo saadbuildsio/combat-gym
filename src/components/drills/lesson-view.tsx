@@ -1,29 +1,35 @@
+"use client";
+
+import { localizeLesson } from "@/content/localize";
 import type { Lesson } from "@/domain/types";
 import { DemoVideo } from "../demo-video";
+import { useLanguage } from "../language-provider";
 import { LessonMoves } from "../lesson-moves";
 
 /** The LEARN step: what it is, when to use it, how to do it, mistakes to avoid, safety. */
-export function LessonView({ lesson }: { lesson: Lesson }) {
+export function LessonView({ lesson: englishLesson }: { lesson: Lesson }) {
+  const { language, t } = useLanguage();
+  const lesson = localizeLesson(englishLesson, language);
   return (
     <article className="space-y-5">
       <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-accent">Level {lesson.level} lesson</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-accent">{t("lesson.levelLesson", { level: lesson.level })}</p>
         <h2 className="mt-1 text-3xl font-black">{lesson.title}</h2>
         <p className="mt-2 text-lg">{lesson.whatItIs}</p>
       </div>
       <LessonMoves lessonId={lesson.id} />
       <DemoVideo id={lesson.id} title={lesson.title} />
-      <Section title="When to use it">
+      <Section title={t("lesson.whenToUse")}>
         <p>{lesson.whenToUse}</p>
       </Section>
-      <Section title="How to do it">
+      <Section title={t("lesson.howTo")}>
         <ol className="list-decimal space-y-2 pl-5">
           {lesson.mechanics.map((m) => (
             <li key={m}>{m}</li>
           ))}
         </ol>
       </Section>
-      <Section title="Common mistakes">
+      <Section title={t("lesson.mistakes")}>
         <ul className="space-y-2">
           {lesson.commonMistakes.map((m) => (
             <li key={m} className="flex gap-2">
@@ -36,14 +42,14 @@ export function LessonView({ lesson }: { lesson: Lesson }) {
         </ul>
       </Section>
       <div className="rounded-xl border border-accent/30 bg-accent/10 p-4 text-sm">
-        <p className="font-bold">Safety</p>
+        <p className="font-bold">{t("lesson.safety")}</p>
         <ul className="mt-1 space-y-1">
           {lesson.safetyNotes.map((s) => (
             <li key={s}>{s}</li>
           ))}
         </ul>
       </div>
-      <p className="text-xs text-muted">Southpaw (right foot forward)? Mirror every instruction.</p>
+      <p className="text-xs text-muted">{t("lesson.southpaw")}</p>
     </article>
   );
 }

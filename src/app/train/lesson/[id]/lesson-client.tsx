@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { AppShell } from "@/components/app-shell";
 import { LessonView } from "@/components/drills/lesson-view";
+import { useT } from "@/components/language-provider";
 import { ButtonLink } from "@/components/ui";
 import { getLesson } from "@/content/boxing/lessons";
 
 /** Read any unlocked lesson again outside a session. */
 export function LessonClient({ id }: { id: string }) {
   const lesson = getLesson(id);
+  const t = useT();
 
   return (
     <AppShell>
@@ -16,17 +18,17 @@ export function LessonClient({ id }: { id: string }) {
         lesson ? (
           <div className="mx-auto max-w-lg">
             <Link href="/train" className="text-sm font-semibold text-muted hover:text-foreground">
-              ‹ Boxing path
+              {t("train.backToPath")}
             </Link>
             <div className="mt-4">
               <LessonView lesson={lesson} />
             </div>
             <ButtonLink href="/train/session" className="mt-8 w-full">
-              Practise in today&apos;s session
+              {t("lesson.practise")}
             </ButtonLink>
           </div>
         ) : (
-          <p className="text-muted">Lesson not found.</p>
+          <p className="text-muted">{t("lesson.notFound")}</p>
         )
       }
     </AppShell>

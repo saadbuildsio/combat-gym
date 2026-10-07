@@ -3,15 +3,17 @@
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { BlockRunner } from "@/components/block-runner";
+import { useLanguage } from "@/components/language-provider";
 import { useProfile } from "@/components/profile-provider";
 import { SessionResults } from "@/components/session-results";
 import { AppShell } from "@/components/app-shell";
 import { ProgressBar } from "@/components/ui";
+import { localizeSafety } from "@/content/localize";
 import { SAFETY_TIPS } from "@/content/safety";
 import { finishSession, type FinishedBlock } from "@/domain/finish-session";
 import type { SessionOutcome } from "@/domain/progress";
 import type { DrillResult, PlayerProfile, SkillRatings, TrainingSessionPlan } from "@/domain/types";
-import { todayKey, todaysPlan } from "@/lib/today";
+import { blockTitle, todayKey, todaysPlan } from "@/lib/today";
 import { track } from "@/services/analytics/events";
 
 export default function SessionPage() {
@@ -21,6 +23,7 @@ export default function SessionPage() {
 /** Runs today's session block by block, then shows results. */
 function SessionPlayer({ profile }: { profile: PlayerProfile }) {
   const { saveProfile } = useProfile();
+  const { language, t } = useLanguage();
   const [plan] = useState<TrainingSessionPlan>(() => todaysPlan(profile));
   const [skillsBefore] = useState<SkillRatings>(() => profile.skills);
   const [index, setIndex] = useState(0);
@@ -68,23 +71,22 @@ function SessionPlayer({ profile }: { profile: PlayerProfile }) {
   if (outcome) return <SessionResults outcome={outcome} skillsBefore={skillsBefore} />;
 
   const block = plan.blocks[index];
+  const tips = localizeSafety("tips", SAFETY_TIPS, language);
   return (
     <div className="mx-auto max-w-lg">
       <div className="flex items-center justify-between text-sm text-muted">
-        <span>
-          Part {index + 1} of {plan.blocks.length}
-        </span>
+        <span>{t("session.part", { part: index + 1, total: plan.blocks.length })}</span>
         <Link href="/" className="font-semibold hover:text-foreground">
-          Exit
+          {t("session.exit")}
         </Link>
       </div>
       <ProgressBar value={index} max={plan.blocks.length} className="mt-2" />
-      <h1 className="mt-6 text-2xl font-black">{block.title}</h1>
+      <h1 className="mt-6 text-2xl font-black">{blockTitle(block, language)}</h1>
       <div className="mt-6">
         {/* key forces a fresh drill state for each block */}
         <BlockRunner key={index} block={block} profile={profile} onDone={onDone} onPain={onPain} />
       </div>
-      <p className="mt-10 text-center text-xs text-muted">💡 {SAFETY_TIPS[index % SAFETY_TIPS.length]}</p>
+      <p className="mt-10 text-center text-xs text-muted">💡 {tips[index % tips.length]}</p>
     </div>
   );
 }

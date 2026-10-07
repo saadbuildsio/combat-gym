@@ -1,3 +1,4 @@
+import type { MessageKey } from "@/i18n/messages/en";
 import { MEASURED_SKILLS, type MeasuredSkill, type SkillRatings } from "./types";
 
 /** How much one new result moves a rating. Lower = steadier ratings. */
@@ -51,4 +52,14 @@ export const SKILL_LABELS: Record<MeasuredSkill, string> = {
   knowledge: "Knowledge",
   consistency: "Consistency",
   conditioning: "Conditioning",
+};
+
+/** Dictionary keys for the skill names, so screens can show them in the player's language. */
+export const SKILL_LABEL_KEYS: Record<MeasuredSkill, MessageKey> = {
+  reaction: "skill.reaction",
+  comboRecall: "skill.comboRecall",
+  fightIQ: "skill.fightIQ",
+  knowledge: "skill.knowledge",
+  consistency: "skill.consistency",
+  conditioning: "skill.conditioning",
 };

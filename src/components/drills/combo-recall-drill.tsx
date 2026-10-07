@@ -3,8 +3,10 @@
 import { useEffect, useRef, useState } from "react";
 import { Button, ProgressBar } from "@/components/ui";
 import { DIRECTION_NAMES, PUNCH_NAMES } from "@/content/boxing/callouts";
+import { localizeDrill, localizePhrase } from "@/content/localize";
 import { scoreComboRecall } from "@/domain/scoring";
 import type { Drill } from "@/domain/types";
+import { useLanguage } from "../language-provider";
 import { pick, type DrillProps } from "./types";
 
 /** Combo lengths per round: starts easy, gets harder. */
@@ -23,6 +25,7 @@ function makeCombo(options: string[], length: number): string[] {
 
 /** Memorise a combination for a couple of seconds, then enter it from memory. */
 export function ComboRecallDrill({ drill, options, onDone }: DrillProps & { drill: Drill; options: string[] }) {
+  const { language, t } = useLanguage();
   const [phase, setPhase] = useState<Phase>("intro");
   const [round, setRound] = useState(0);
   const [combo, setCombo] = useState<string[]>([]);
@@ -70,15 +73,18 @@ export function ComboRecallDrill({ drill, options, onDone }: DrillProps & { dril
     }
   };
 
-  const label = (o: string) => PUNCH_NAMES[o] ?? DIRECTION_NAMES[o] ?? o;
+  const label = (o: string) => {
+    const english = PUNCH_NAMES[o] ?? DIRECTION_NAMES[o];
+    return english ? localizePhrase(english, language) : o;
+  };
 
   if (phase === "intro") {
     return (
       <div className="text-center">
-        <p className="text-muted">{drill.description}</p>
-        <p className="mt-4 text-sm text-muted">{ROUND_LENGTHS.length} combos. They get longer each round.</p>
+        <p className="text-muted">{localizeDrill(drill, language).description}</p>
+        <p className="mt-4 text-sm text-muted">{t("recall.intro", { count: ROUND_LENGTHS.length })}</p>
         <Button className="mt-8 w-full" onClick={() => startRound(0)}>
-          Start
+          {t("common.start")}
         </Button>
       </div>
     );
@@ -90,21 +96,21 @@ export function ComboRecallDrill({ drill, options, onDone }: DrillProps & { dril
       <div className="mt-8 flex min-h-40 flex-col items-center justify-center rounded-2xl bg-surface-2 p-4" aria-live="polite">
         {phase === "show" && (
           <>
-            <p className="text-sm text-muted">Remember this</p>
+            <p className="text-sm text-muted">{t("recall.remember")}</p>
             <p className="mt-2 text-5xl font-black tracking-widest text-accent">{combo.join(" ")}</p>
             <p className="mt-2 text-sm text-muted">{combo.map(label).join(" → ")}</p>
           </>
         )}
         {phase === "input" && (
           <>
-            <p className="text-sm text-muted">Enter the combo</p>
+            <p className="text-sm text-muted">{t("recall.enter")}</p>
             <p className="mt-2 text-5xl font-black tracking-widest">{entered.join(" ") || "…"}</p>
           </>
         )}
         {phase === "feedback" && (
           <>
-            <p className={`text-2xl font-black ${lastCorrect ? "text-good" : "text-danger"}`}>{lastCorrect ? "Correct" : "Not quite"}</p>
-            {!lastCorrect && <p className="mt-2 text-muted">It was {combo.join(" ")}</p>}
+            <p className={`text-2xl font-black ${lastCorrect ? "text-good" : "text-danger"}`}>{lastCorrect ? t("recall.correct") : t("recall.notQuite")}</p>
+            {!lastCorrect && <p className="mt-2 text-muted">{t("recall.itWas", { combo: combo.join(" ") })}</p>}
           </>
         )}
       </div>

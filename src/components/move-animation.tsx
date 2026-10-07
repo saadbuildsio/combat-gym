@@ -143,11 +143,30 @@ const TRAILS: Record<Exclude<MoveTrail, "none">, string> = {
   "hook-rear": "M136 58 Q170 26 194 62",
   "upper-lead": "M150 104 Q186 100 196 64",
   "upper-rear": "M146 108 Q190 104 198 62",
+  "body-lead": "M148 90 L194 104",
+  "body-rear": "M142 84 L196 102",
+  "body-hook": "M150 104 Q174 78 190 108",
+  // Defense: the opponent's punch coming at the fighter, drawn in grey so it does not look like our own punch.
+  "incoming-straight": "M206 46 L140 46",
+  "incoming-hook": "M206 64 Q160 8 108 42",
 };
+
+const INCOMING = "#9aa5b4";
 
 function Trail({ trail }: { trail: MoveTrail }) {
   if (trail === "none") return null;
-  return <path d={TRAILS[trail]} fill="none" stroke={GLOVE} strokeWidth="3" strokeDasharray="5 5" strokeLinecap="round" opacity="0.45" />;
+  const incoming = trail.startsWith("incoming");
+  return (
+    <path
+      d={TRAILS[trail]}
+      fill="none"
+      stroke={incoming ? INCOMING : GLOVE}
+      strokeWidth="3"
+      strokeDasharray="5 5"
+      strokeLinecap="round"
+      opacity={incoming ? 0.6 : 0.45}
+    />
+  );
 }
 
 function Limb({ points, color, width }: { points: Point[]; color: string; width: number }) {

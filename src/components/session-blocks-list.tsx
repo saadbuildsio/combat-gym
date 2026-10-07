@@ -1,4 +1,8 @@
+"use client";
+
 import type { SessionBlock } from "@/domain/types";
+import { blockTitle } from "@/lib/today";
+import { useLanguage } from "./language-provider";
 
 const BLOCK_ICONS: Record<SessionBlock["type"], string> = {
   warmup: "🔥",
@@ -10,6 +14,7 @@ const BLOCK_ICONS: Record<SessionBlock["type"], string> = {
 };
 
 export function SessionBlocksList({ blocks, activeIndex }: { blocks: SessionBlock[]; activeIndex?: number }) {
+  const { language, t } = useLanguage();
   return (
     <ol className="space-y-2">
       {blocks.map((block, i) => (
@@ -19,9 +24,9 @@ export function SessionBlocksList({ blocks, activeIndex }: { blocks: SessionBloc
         >
           <span className="flex items-center gap-3">
             <span aria-hidden>{BLOCK_ICONS[block.type]}</span>
-            <span className="font-semibold">{block.title}</span>
+            <span className="font-semibold">{blockTitle(block, language)}</span>
           </span>
-          <span className="whitespace-nowrap text-sm tabular-nums text-muted">{block.minutes} min</span>
+          <span className="whitespace-nowrap text-sm tabular-nums text-muted">{t("common.minutes", { minutes: block.minutes })}</span>
         </li>
       ))}
     </ol>

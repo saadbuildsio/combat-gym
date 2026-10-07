@@ -13,15 +13,18 @@ import {
 import { getDrill } from "@/content/boxing/drills";
 import { BOXING_LESSONS, getLesson } from "@/content/boxing/lessons";
 import { BOXING_OPPONENTS, getOpponent } from "@/content/boxing/opponents";
+import { localizeLesson, localizeOpponent } from "@/content/localize";
 import { knowsPunches } from "@/domain/curriculum";
 import { opponentForSession } from "@/domain/finish-session";
 import { scoreFightIQ, scoreQuiz } from "@/domain/scoring";
 import type { DrillResult, PlayerProfile, SessionBlock } from "@/domain/types";
+import type { Language } from "@/i18n/language";
 import { ChoiceDrill } from "./drills/choice-drill";
 import { ComboRecallDrill } from "./drills/combo-recall-drill";
 import { LessonView } from "./drills/lesson-view";
 import { ReactionDrill } from "./drills/reaction-drill";
 import { TimedRound } from "./drills/timed-round";
+import { useLanguage, useT } from "./language-provider";
 import { shuffle } from "./drills/types";
 
 /** Picks the right screen for one block of a training session. */
@@ -37,6 +40,7 @@ export function BlockRunner({
   onPain: (partial: DrillResult) => void;
 }) {
   const punches = knowsPunches(profile.completedLessonIds);
+  const { language, t } = useLanguage();
 
   if (block.type === "learn" && block.lessonId) {
     const lesson = getLesson(block.lessonId);
@@ -48,7 +52,7 @@ export function BlockRunner({
           className="mt-8 w-full"
           onClick={() => onDone({ drillId: `lesson:${lesson.id}`, kind: "lesson", completed: true, scores: {} })}
         >
-          Got it
+          {t("lesson.gotIt")}
         </Button>
       </div>
     );
@@ -81,7 +85,7 @@ export function BlockRunner({
     case "comboRecall":
       return <ComboRecallDrill {...props} drill={drill} options={punches ? PUNCH_OPTIONS_ALL : DIRECTION_OPTIONS} />;
     case "quiz": {
-      const questions = quizQuestions(block.lessonId, profile.completedLessonIds);
+      const questions = quizQuestions(block.lessonId, profile.completedLessonIds, language);
       return (
         <ChoiceDrill
           questions={questions.map((q) => ({ id: q.id, prompt: q.question, options: q.options, bestIndex: q.correctIndex, explanation: q.explanation }))}
@@ -107,15 +111,17 @@ export function BlockRunner({
 
 /** Fight IQ round against one opponent. Also used on the Fighters screen. */
 export function FightIQMatch({ opponentId, drillId, onDone }: { opponentId: string; drillId: string; onDone: (r: DrillResult) => void }) {
-  const opponent = getOpponent(opponentId) ?? BOXING_OPPONENTS[0];
+  const { language, t } = useLanguage();
+  // Scoring uses positions only, so the translated opponent scores exactly like the English one.
+  const opponent = localizeOpponent(getOpponent(opponentId) ?? BOXING_OPPONENTS[0], language);
   return (
     <ChoiceDrill
       intro={
         <div>
-          <p className="text-xs font-bold uppercase tracking-widest text-muted">Your opponent</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-muted">{t("fight.yourOpponent")}</p>
           <h3 className="mt-1 text-3xl font-black">{opponent.name}</h3>
           <p className="mt-2 text-muted">{opponent.description}</p>
-          <p className="mt-4 text-sm">Read each situation and choose the smartest response.</p>
+          <p className="mt-4 text-sm">{t("fight.instructions")}</p>
         </div>
       }
       questions={opponent.scenarios.map((s) => ({
@@ -138,11 +144,14 @@ export function FightIQMatch({ opponentId, drillId, onDone }: { opponentId: stri
   );
 }
 
-function quizQuestions(lessonId: string | undefined, completed: string[]) {
-  const lesson = lessonId ? getLesson(lessonId) : undefined;
-  if (lesson) return lesson.quiz;
-  const pool = BOXING_LESSONS.filter((l) => completed.includes(l.id)).flatMap((l) => l.quiz);
-  return pool.length ? shuffle(pool).slice(0, 3) : BOXING_LESSONS[0].quiz;
+function quizQuestions(lessonId: string | undefined, completed: string[], language: Language) {
+  const quiz = (id: string) => {
+    const lesson = getLesson(id);
+    return lesson ? localizeLesson(lesson, language).quiz : [];
+  };
+  if (lessonId && getLesson(lessonId)) return quiz(lessonId);
+  const pool = BOXING_LESSONS.filter((l) => completed.includes(l.id)).flatMap((l) => quiz(l.id));
+  return pool.length ? shuffle(pool).slice(0, 3) : quiz(BOXING_LESSONS[0].id);
 }
 
 function skipped(block: SessionBlock): DrillResult {
@@ -150,11 +159,12 @@ function skipped(block: SessionBlock): DrillResult {
 }
 
 function MissingBlock({ onSkip }: { onSkip: () => void }) {
+  const t = useT();
   return (
     <div className="text-center">
-      <p className="text-muted">This part of the session is not available yet.</p>
+      <p className="text-muted">{t("session.missingPart")}</p>
       <Button className="mt-6" variant="secondary" onClick={onSkip}>
-        Skip
+        {t("common.skip")}
       </Button>
     </div>
   );

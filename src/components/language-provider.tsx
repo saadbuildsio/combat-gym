@@ -1,18 +1,18 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { fill, LANGUAGE_STORAGE_KEY, type Language } from "@/i18n/language";
-import { en, type MessageKey } from "@/i18n/messages/en";
-import { roman } from "@/i18n/messages/roman";
-
-const MESSAGES = { en, roman } as const;
+import { LANGUAGE_STORAGE_KEY, type Language } from "@/i18n/language";
+import type { Message, MessageValue } from "@/i18n/message";
+import type { MessageKey } from "@/i18n/messages/en";
+import { translate } from "@/i18n/translate";
 
 interface LanguageContextValue {
   language: Language;
   /** False until the player has picked a language on this device. */
   chosen: boolean;
   setLanguage: (language: Language) => void;
-  t: (key: MessageKey, values?: Record<string, string | number>) => string;
+  /** Wording for a dictionary key, or for a Message returned by the domain (coach notes, missions...). */
+  t: (key: MessageKey | Message, values?: Record<string, MessageValue>) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -46,7 +46,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const t = useCallback((key: MessageKey, values?: Record<string, string | number>) => fill(MESSAGES[language][key] ?? en[key], values), [language]);
+  const t = useCallback(
+    (key: MessageKey | Message, values?: Record<string, MessageValue>) => translate(language, key, values),
+    [language],
+  );
 
   const value = useMemo(() => ({ language, chosen, setLanguage, t }), [language, chosen, setLanguage, t]);
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;

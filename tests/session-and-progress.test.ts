@@ -7,6 +7,7 @@ import { SPORTS } from "@/content/sports";
 import { BOXING_LEVELS } from "@/content/boxing/levels";
 import { BOXING_LESSONS } from "@/content/boxing/lessons";
 import type { CompletedSession } from "@/domain/types";
+import { translate } from "@/i18n/translate";
 
 describe("content integrity", () => {
   it("only boxing is available", () => {
@@ -36,7 +37,7 @@ describe("onboarding", () => {
   it("warns competition-prep users to train with a real coach", () => {
     const p = buildStartingProgram({ experience: "intermediate", goal: "competition_prep", minutesPerDay: 30 });
     expect(p.startingXp).toBe(300);
-    expect(p.advisory).toMatch(/qualified coach/);
+    expect(translate("en", p.advisory!)).toMatch(/qualified coach/);
   });
 });
 
@@ -82,8 +83,8 @@ describe("applying a session", () => {
     expect(out.profile.completedLessonIds).toContain("boxing-stance");
     expect(out.newAchievements).toEqual(expect.arrayContaining(["first_session", "quick_hands"]));
     expect(out.profile.totalXp).toBe(150 + 50 + 75);
-    expect(out.coach.detail).toMatch(/Knowledge scored 40 and needs work/);
-    expect(out.coach.headline).not.toMatch(/^Great job/);
+    expect(translate("en", out.coach.detail)).toMatch(/Knowledge scored 40 and needs work/);
+    expect(translate("en", out.coach.headline)).not.toMatch(/^Great job/);
   });
 
   it("switches the coach to a safety message when pain is reported", () => {

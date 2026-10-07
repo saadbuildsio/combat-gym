@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button, ProgressBar } from "@/components/ui";
+import { useT } from "../language-provider";
 
 export interface ChoiceQuestion {
   id: string;
@@ -25,6 +26,7 @@ export function ChoiceDrill({
   questions: ChoiceQuestion[];
   onComplete: (chosenIndexes: number[]) => void;
 }) {
+  const t = useT();
   const [started, setStarted] = useState(!intro);
   const [index, setIndex] = useState(0);
   const [chosen, setChosen] = useState<number[]>([]);
@@ -36,7 +38,7 @@ export function ChoiceDrill({
       <div className="text-center">
         {intro}
         <Button className="mt-8 w-full" onClick={() => setStarted(true)}>
-          Start
+          {t("common.start")}
         </Button>
       </div>
     );
@@ -76,14 +78,14 @@ export function ChoiceDrill({
       {answered && (
         <div className="mt-4 rounded-xl bg-surface-2 p-4" aria-live="polite">
           <p className="font-bold">
-            {result(chosen[index]) === "best" ? "✓ Best answer" : result(chosen[index]) === "ok" ? "Partly right" : "Not the best choice"}
+            {result(chosen[index]) === "best" ? t("choice.best") : result(chosen[index]) === "ok" ? t("choice.ok") : t("choice.wrong")}
           </p>
           <p className="mt-1 text-sm text-muted">{question.explanation}</p>
           <Button
             className="mt-4 w-full"
             onClick={() => (index + 1 >= questions.length ? onComplete(chosen) : setIndex(index + 1))}
           >
-            {index + 1 >= questions.length ? "Finish" : "Next"}
+            {index + 1 >= questions.length ? t("common.finish") : t("common.next")}
           </Button>
         </div>
       )}

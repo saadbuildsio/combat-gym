@@ -68,3 +68,8 @@ export function knowsPunches(completedLessonIds: string[]): boolean {
 export function isLevelComplete(level: CurriculumLevel, completedLessonIds: string[]): boolean {
   return level.contentReady && level.lessonIds.length > 0 && level.lessonIds.every((id) => completedLessonIds.includes(id));
 }
+
+/** True when the player has finished at least one of these lessons. */
+export function completedAny(lessonIds: string[], completedLessonIds: string[]): boolean {
+  return lessonIds.some((id) => completedLessonIds.includes(id));
+}

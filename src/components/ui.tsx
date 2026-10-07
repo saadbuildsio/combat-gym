@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useT } from "./language-provider";
 
 /** Small shared UI pieces. Keep styling here so every screen looks the same. */
 
@@ -51,6 +54,7 @@ export function SectionTitle({ children }: { children: React.ReactNode }) {
 /** Horizontal bar for a 0-100 skill. A value of 0 reads as "not measured yet". */
 export function StatBar({ label, value, locked = false }: { label: string; value: number; locked?: boolean }) {
   const measured = !locked && value > 0;
+  const t = useT();
   return (
     <div>
       <div className="flex items-baseline justify-between text-sm">
@@ -58,7 +62,7 @@ export function StatBar({ label, value, locked = false }: { label: string; value
           {locked ? "🔒 " : ""}
           {label}
         </span>
-        <span className="tabular-nums text-muted">{locked ? "Camera" : measured ? value : "Not measured"}</span>
+        <span className="tabular-nums text-muted">{locked ? t("skill.camera") : measured ? value : t("skill.notMeasured")}</span>
       </div>
       <div className="mt-1 h-2 overflow-hidden rounded-full bg-surface-2" role="presentation">
         {measured && <div className="h-full rounded-full bg-accent" style={{ width: `${value}%` }} />}

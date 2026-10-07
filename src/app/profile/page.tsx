@@ -3,9 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { AppShell } from "@/components/app-shell";
+import { LanguagePicker } from "@/components/language-picker";
+import { useLanguage } from "@/components/language-provider";
 import { useProfile } from "@/components/profile-provider";
 import { Button, Card, Pill, SectionTitle } from "@/components/ui";
 import { ACHIEVEMENTS } from "@/content/achievements";
+import { localizeAchievement, localizeSafety } from "@/content/localize";
 import { EQUIPMENT_GUIDANCE, SAFETY_DISCLAIMER } from "@/content/safety";
 import { visibleStreak } from "@/domain/streak";
 import type { PlayerProfile } from "@/domain/types";
@@ -19,6 +22,7 @@ export default function ProfilePage() {
 function Profile({ profile }: { profile: PlayerProfile }) {
   const router = useRouter();
   const { resetProfile } = useProfile();
+  const { language, t } = useLanguage();
   const [confirmReset, setConfirmReset] = useState(false);
   const level = levelProgress(profile.totalXp);
   const streak = visibleStreak(profile.streak, todayKey());
@@ -32,20 +36,28 @@ function Profile({ profile }: { profile: PlayerProfile }) {
         <div>
           <h1 className="text-2xl font-black uppercase">{profile.displayName}</h1>
           <p className="text-muted">
-            Level {level.level} · {level.title}
+            {t("profile.levelAndRank", { level: level.level, rank: t(level.titleKey) })}
           </p>
           <div className="mt-2 flex flex-wrap gap-2">
-            <Pill tone="accent">🔥 {streak} day streak</Pill>
-            <Pill>🥊 Boxing</Pill>
-            <Pill>{profile.plan === "pro" ? "PRO" : "Free plan"}</Pill>
+            <Pill tone="accent">🔥 {t("common.streak", { count: streak })}</Pill>
+            <Pill>{t("profile.boxing")}</Pill>
+            <Pill>{profile.plan === "pro" ? t("profile.pro") : t("profile.freePlan")}</Pill>
           </div>
         </div>
       </Card>
 
       <Card>
-        <SectionTitle>Achievements</SectionTitle>
+        <SectionTitle>{t("language.setting")}</SectionTitle>
+        <div className="mt-3">
+          <LanguagePicker />
+        </div>
+      </Card>
+
+      <Card>
+        <SectionTitle>{t("common.achievements")}</SectionTitle>
         <ul className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-3">
-          {ACHIEVEMENTS.map((a) => {
+          {ACHIEVEMENTS.map((english) => {
+            const a = localizeAchievement(english, language);
             const earned = profile.achievements.includes(a.id);
             return (
               <li key={a.id} className={`rounded-xl p-3 ${earned ? "bg-accent/15" : "bg-surface-2 opacity-50"}`}>
@@ -61,18 +73,18 @@ function Profile({ profile }: { profile: PlayerProfile }) {
       </Card>
 
       <Card>
-        <SectionTitle>Equipment</SectionTitle>
+        <SectionTitle>{t("profile.equipment")}</SectionTitle>
         <ul className="mt-3 space-y-1 text-sm text-muted">
-          {EQUIPMENT_GUIDANCE.map((e) => (
+          {localizeSafety("equipment", EQUIPMENT_GUIDANCE, language).map((e) => (
             <li key={e}>{e}</li>
           ))}
         </ul>
-        <p className="mt-4 text-xs text-muted">{SAFETY_DISCLAIMER}</p>
+        <p className="mt-4 text-xs text-muted">{localizeSafety("disclaimer", SAFETY_DISCLAIMER, language)}</p>
       </Card>
 
       <Card>
-        <SectionTitle>Data</SectionTitle>
-        <p className="mt-2 text-sm text-muted">Your progress is saved on this device only. Accounts and cloud sync come later.</p>
+        <SectionTitle>{t("profile.data")}</SectionTitle>
+        <p className="mt-2 text-sm text-muted">{t("profile.dataNote")}</p>
         {confirmReset ? (
           <div className="mt-4 flex gap-3">
             <Button
@@ -82,15 +94,15 @@ function Profile({ profile }: { profile: PlayerProfile }) {
                 router.replace("/welcome");
               }}
             >
-              Yes, delete everything
+              {t("profile.confirmDelete")}
             </Button>
             <Button variant="ghost" onClick={() => setConfirmReset(false)}>
-              Cancel
+              {t("common.cancel")}
             </Button>
           </div>
         ) : (
           <Button variant="danger" className="mt-4" onClick={() => setConfirmReset(true)}>
-            Reset progress
+            {t("profile.reset")}
           </Button>
         )}
       </Card>

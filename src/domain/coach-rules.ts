@@ -1,28 +1,34 @@
-import { SKILL_LABELS, TRAINABLE_SKILLS, weakestSkill } from "./skills";
+import { msg, type Message } from "@/i18n/message";
+import type { MessageKey } from "@/i18n/messages/en";
+import { SKILL_LABEL_KEYS, TRAINABLE_SKILLS, weakestSkill } from "./skills";
 import type { CompletedSession, MeasuredSkill, SkillRatings } from "./types";
 
 /**
  * Rule-based AI coach.
  * The rules decide WHAT to say from real numbers. A language model may later reword the note,
  * but never invent scores or praise that the numbers do not support.
+ * Notes are Messages (dictionary key + values), so the screen shows them in the player's language.
  */
 
 export interface CoachNote {
   tone: "safety" | "progress" | "focus";
-  headline: string;
-  detail: string;
+  headline: Message;
+  detail: Message;
   tomorrowFocus: MeasuredSkill | null;
 }
 
 /** Practical tip per skill so feedback is always actionable. */
-const SKILL_TIPS: Record<MeasuredSkill, string> = {
-  reaction: "Stay relaxed in your guard. Tension slows your first move.",
-  comboRecall: "Say the numbers out loud as you throw them. It locks the pattern in.",
-  fightIQ: "Before choosing, ask: what is this opponent trying to make me do?",
-  knowledge: "Re-read the common mistakes section before your next round.",
-  consistency: "Short sessions count. Ten minutes today beats an hour next week.",
-  conditioning: "Finish the full round at a steady pace before trying to go faster.",
+const SKILL_TIPS: Record<MeasuredSkill, MessageKey> = {
+  reaction: "coach.tip.reaction",
+  comboRecall: "coach.tip.comboRecall",
+  fightIQ: "coach.tip.fightIQ",
+  knowledge: "coach.tip.knowledge",
+  consistency: "coach.tip.consistency",
+  conditioning: "coach.tip.conditioning",
 };
+
+const label = (skill: MeasuredSkill): Message => msg(SKILL_LABEL_KEYS[skill]);
+const tip = (skill: MeasuredSkill): Message => msg(SKILL_TIPS[skill]);
 
 const STRONG = 75;
 const WEAK = 50;
@@ -35,8 +41,8 @@ export function coachNoteForSession(
   if (session.results.some((r) => r.reportedPain)) {
     return {
       tone: "safety",
-      headline: "Session stopped for your safety.",
-      detail: "You reported pain, so we ended training. Rest, and get it checked if it does not settle. Your progress is saved.",
+      headline: msg("coach.painHeadline"),
+      detail: msg("coach.painDetail"),
       tomorrowFocus: null,
     };
   }
@@ -62,8 +68,8 @@ export function coachNoteForSession(
   if (scored.length === 0) {
     return {
       tone: "focus",
-      headline: "Rounds completed.",
-      detail: `You finished the session, but there were no scored drills today. Tomorrow includes a ${SKILL_LABELS[focus]} test so we can measure progress.`,
+      headline: msg("coach.noScoresHeadline"),
+      detail: msg("coach.noScoresDetail", { skill: label(focus) }),
       tomorrowFocus: focus,
     };
   }
@@ -78,37 +84,35 @@ export function coachNoteForSession(
     .sort((a, b) => b.delta - a.delta);
   const topGain = improvements[0];
 
-  let headline: string;
+  let headline: Message;
   if (topGain && topGain.delta >= 3) {
-    headline = `${SKILL_LABELS[topGain.skill]} is up ${topGain.delta} points.`;
+    headline = msg("coach.gainHeadline", { skill: label(topGain.skill), points: topGain.delta });
   } else if (best.score >= STRONG) {
-    headline = `${SKILL_LABELS[best.skill]} was your strongest area today at ${best.score}.`;
+    headline = msg("coach.strongHeadline", { skill: label(best.skill), score: best.score });
   } else {
-    headline = `Solid work. ${SKILL_LABELS[best.skill]} led the session at ${best.score}.`;
+    headline = msg("coach.solidHeadline", { skill: label(best.skill), score: best.score });
   }
 
-  let detail: string;
+  let detail: Message;
   if (worst.skill !== best.skill && worst.score < WEAK) {
-    detail = `${SKILL_LABELS[worst.skill]} scored ${worst.score} and needs work. ${SKILL_TIPS[worst.skill]}`;
+    detail = msg("coach.weakDetail", { skill: label(worst.skill), score: worst.score, tip: tip(worst.skill) });
   } else if (worst.skill !== best.skill) {
-    detail = `${SKILL_LABELS[worst.skill]} (${worst.score}) is your lowest today. ${SKILL_TIPS[worst.skill]}`;
+    detail = msg("coach.lowestDetail", { skill: label(worst.skill), score: worst.score, tip: tip(worst.skill) });
   } else {
-    detail = SKILL_TIPS[focus];
+    detail = tip(focus);
   }
 
   return {
     tone: topGain && topGain.delta >= 3 ? "progress" : "focus",
     headline,
-    detail: `${detail} Tomorrow's session focuses on ${SKILL_LABELS[focus]}.`,
+    detail: msg("coach.withTomorrow", { detail, skill: label(focus) }),
     tomorrowFocus: focus,
   };
 }
 
 /** One-line message for the Home screen, before today's session. */
-export function homeCoachLine(skills: SkillRatings, sessionsCompleted: number): string {
-  if (sessionsCompleted === 0) {
-    return "Welcome. Today we build your stance and guard. Everything else starts from there.";
-  }
+export function homeCoachLine(skills: SkillRatings, sessionsCompleted: number): Message {
+  if (sessionsCompleted === 0) return msg("coach.homeFirst");
   const focus = weakestSkill(skills);
-  return `Today we focus on ${SKILL_LABELS[focus]}. ${SKILL_TIPS[focus]}`;
+  return msg("coach.homeFocus", { skill: label(focus), tip: tip(focus) });
 }

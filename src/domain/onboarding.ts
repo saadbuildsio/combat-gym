@@ -1,3 +1,4 @@
+import { msg, type Message } from "@/i18n/message";
 import type { MinutesPerDay, OnboardingAnswers } from "./types";
 
 export interface StartingProgram {
@@ -6,9 +7,9 @@ export interface StartingProgram {
   /** XP granted at the start so experienced users skip Level 1 lessons they already know. */
   startingXp: number;
   /** Message shown on the "your program is ready" screen. */
-  welcomeMessage: string;
+  welcomeMessage: Message;
   /** Extra guidance shown once, e.g. for competition goals. */
-  advisory: string | null;
+  advisory: Message | null;
 }
 
 /** Complete beginners are capped at 15 minutes until they have built a base. */
@@ -24,16 +25,14 @@ export function buildStartingProgram(answers: OnboardingAnswers): StartingProgra
   const startingXp = isNew ? 0 : 300;
 
   const welcomeMessage = isNew
-    ? `We start from zero: stance, guard and footwork. Your sessions are ${sessionMinutes} minutes.`
-    : `Level 2 punches are unlocked. Your sessions are ${sessionMinutes} minutes.`;
+    ? msg("onboarding.welcomeNew", { minutes: sessionMinutes })
+    : msg("onboarding.welcomeExperienced", { minutes: sessionMinutes });
 
-  let advisory: string | null = null;
+  let advisory: Message | null = null;
   if (answers.goal === "competition_prep") {
-    advisory =
-      "Competing needs a qualified coach, sparring under supervision and a medical check. " +
-      "Use Combat Gym to sharpen fundamentals and fight IQ alongside a real gym, not instead of one.";
+    advisory = msg("onboarding.advisoryCompetition");
   } else if (answers.minutesPerDay > cap) {
-    advisory = `We have set sessions to ${cap} minutes while you build a base. You can train more once you level up.`;
+    advisory = msg("onboarding.advisoryCap", { minutes: cap });
   }
 
   return { sessionMinutes, startingXp, welcomeMessage, advisory };

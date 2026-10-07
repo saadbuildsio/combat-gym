@@ -2,26 +2,28 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useT } from "@/components/language-provider";
 import { useProfile } from "@/components/profile-provider";
 import { Button, Card, ProgressBar } from "@/components/ui";
 import { buildStartingProgram, type StartingProgram } from "@/domain/onboarding";
 import { completeOnboarding } from "@/domain/progress";
 import type { ExperienceLevel, MinutesPerDay, TrainingGoal } from "@/domain/types";
+import type { MessageKey } from "@/i18n/messages/en";
 import { track } from "@/services/analytics/events";
 
-const EXPERIENCE: { value: ExperienceLevel; label: string; hint: string }[] = [
-  { value: "complete_beginner", label: "Complete beginner", hint: "Never trained before" },
-  { value: "beginner", label: "Beginner", hint: "A few classes or videos" },
-  { value: "intermediate", label: "Intermediate", hint: "Trained for months" },
-  { value: "advanced", label: "Advanced", hint: "Trained for years" },
+const EXPERIENCE: { value: ExperienceLevel; label: MessageKey; hint: MessageKey }[] = [
+  { value: "complete_beginner", label: "experience.complete_beginner", hint: "experience.complete_beginner.hint" },
+  { value: "beginner", label: "experience.beginner", hint: "experience.beginner.hint" },
+  { value: "intermediate", label: "experience.intermediate", hint: "experience.intermediate.hint" },
+  { value: "advanced", label: "experience.advanced", hint: "experience.advanced.hint" },
 ];
 
-const GOALS: { value: TrainingGoal; label: string }[] = [
-  { value: "learn_boxing", label: "Learn boxing" },
-  { value: "fitness", label: "Get fit" },
-  { value: "improve_technique", label: "Improve technique" },
-  { value: "competition_prep", label: "Prepare for competition" },
-  { value: "fun", label: "Just have fun" },
+const GOALS: { value: TrainingGoal; label: MessageKey }[] = [
+  { value: "learn_boxing", label: "goal.learn_boxing" },
+  { value: "fitness", label: "goal.fitness" },
+  { value: "improve_technique", label: "goal.improve_technique" },
+  { value: "competition_prep", label: "goal.competition_prep" },
+  { value: "fun", label: "goal.fun" },
 ];
 
 const MINUTES: MinutesPerDay[] = [5, 10, 15, 30, 45];
@@ -30,6 +32,7 @@ const MINUTES: MinutesPerDay[] = [5, 10, 15, 30, 45];
 export default function OnboardingPage() {
   const router = useRouter();
   const { profile, loading, saveProfile } = useProfile();
+  const t = useT();
   const [step, setStep] = useState(0);
   const [experience, setExperience] = useState<ExperienceLevel | null>(null);
   const [goal, setGoal] = useState<TrainingGoal | null>(null);
@@ -57,11 +60,11 @@ export default function OnboardingPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-lg flex-col px-4 py-8">
       <ProgressBar value={step} max={3} />
-      <p className="mt-2 text-xs text-muted">{step < 3 ? `Step ${step + 1} of 3` : "Ready"}</p>
+      <p className="mt-2 text-xs text-muted">{step < 3 ? t("onboarding.step", { step: step + 1, total: 3 }) : t("onboarding.ready")}</p>
 
       {step === 0 && (
         <>
-          <h1 className="mt-6 text-3xl font-black">What is your experience?</h1>
+          <h1 className="mt-6 text-3xl font-black">{t("onboarding.experienceQuestion")}</h1>
           <div className="mt-6 space-y-3">
             {EXPERIENCE.map((e) => (
               <button
@@ -73,8 +76,8 @@ export default function OnboardingPage() {
                   setStep(1);
                 }}
               >
-                <span className="block font-bold">{e.label}</span>
-                <span className="text-sm text-muted">{e.hint}</span>
+                <span className="block font-bold">{t(e.label)}</span>
+                <span className="text-sm text-muted">{t(e.hint)}</span>
               </button>
             ))}
           </div>
@@ -83,7 +86,7 @@ export default function OnboardingPage() {
 
       {step === 1 && (
         <>
-          <h1 className="mt-6 text-3xl font-black">What is your goal?</h1>
+          <h1 className="mt-6 text-3xl font-black">{t("onboarding.goalQuestion")}</h1>
           <div className="mt-6 space-y-3">
             {GOALS.map((g) => (
               <button
@@ -95,42 +98,42 @@ export default function OnboardingPage() {
                   setStep(2);
                 }}
               >
-                <span className="font-bold">{g.label}</span>
+                <span className="font-bold">{t(g.label)}</span>
               </button>
             ))}
           </div>
           <Button variant="ghost" className="mt-4" onClick={() => setStep(0)}>
-            Back
+            {t("common.back")}
           </Button>
         </>
       )}
 
       {step === 2 && (
         <>
-          <h1 className="mt-6 text-3xl font-black">How much time can you train each day?</h1>
+          <h1 className="mt-6 text-3xl font-black">{t("onboarding.timeQuestion")}</h1>
           <div className="mt-6 grid grid-cols-2 gap-3">
             {MINUTES.map((m) => (
               <button key={m} type="button" className={option(false)} onClick={() => chooseMinutes(m)}>
                 <span className="text-2xl font-black">{m === 45 ? "45+" : m}</span>
-                <span className="ml-1 text-sm text-muted">min</span>
+                <span className="ml-1 text-sm text-muted">{t("common.minUnit")}</span>
               </button>
             ))}
           </div>
           <Button variant="ghost" className="mt-4" onClick={() => setStep(1)}>
-            Back
+            {t("common.back")}
           </Button>
         </>
       )}
 
       {step === 3 && program && (
         <>
-          <h1 className="mt-6 text-3xl font-black">Your program is ready, {profile.displayName}.</h1>
+          <h1 className="mt-6 text-3xl font-black">{t("onboarding.programReady", { name: profile.displayName })}</h1>
           <Card className="mt-6">
-            <p className="text-lg">{program.welcomeMessage}</p>
-            {program.advisory && <p className="mt-4 rounded-xl bg-surface-2 p-4 text-sm text-muted">{program.advisory}</p>}
+            <p className="text-lg">{t(program.welcomeMessage)}</p>
+            {program.advisory && <p className="mt-4 rounded-xl bg-surface-2 p-4 text-sm text-muted">{t(program.advisory)}</p>}
           </Card>
           <Button className="mt-8 w-full" onClick={() => router.push("/")}>
-            Enter the gym
+            {t("onboarding.enterGym")}
           </Button>
         </>
       )}

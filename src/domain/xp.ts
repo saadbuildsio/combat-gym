@@ -4,6 +4,7 @@
  * Level 2 = 100 XP, level 5 = 1,000 XP, level 10 = 4,500 XP, level 12 = 6,600 XP.
  */
 
+import type { MessageKey } from "@/i18n/messages/en";
 import type { DrillResult } from "./types";
 
 export function totalXpForLevel(level: number): number {
@@ -19,26 +20,38 @@ export function levelForXp(totalXp: number): number {
 
 export interface LevelProgress {
   level: number;
+  /** English rank title. Screens show `titleKey` instead, in the player's language. */
   title: string;
+  titleKey: MessageKey;
   xpIntoLevel: number;
   xpForNextLevel: number;
   nextTitle: string;
+  nextTitleKey: MessageKey;
 }
 
 /** Rank titles a player earns as they level up. */
-const RANK_TITLES: { minLevel: number; title: string }[] = [
-  { minLevel: 1, title: "Rookie" },
-  { minLevel: 4, title: "Prospect" },
-  { minLevel: 8, title: "Contender" },
-  { minLevel: 13, title: "Counter Puncher" },
-  { minLevel: 18, title: "Ring General" },
-  { minLevel: 25, title: "Fighter" },
+const RANK_TITLES: { minLevel: number; title: string; key: MessageKey }[] = [
+  { minLevel: 1, title: "Rookie", key: "rank.rookie" },
+  { minLevel: 4, title: "Prospect", key: "rank.prospect" },
+  { minLevel: 8, title: "Contender", key: "rank.contender" },
+  { minLevel: 13, title: "Counter Puncher", key: "rank.counterPuncher" },
+  { minLevel: 18, title: "Ring General", key: "rank.ringGeneral" },
+  { minLevel: 25, title: "Fighter", key: "rank.fighter" },
 ];
 
+function rankFor(level: number) {
+  let found = RANK_TITLES[0];
+  for (const rank of RANK_TITLES) if (level >= rank.minLevel) found = rank;
+  return found;
+}
+
 export function rankTitle(level: number): string {
-  let title = RANK_TITLES[0].title;
-  for (const rank of RANK_TITLES) if (level >= rank.minLevel) title = rank.title;
-  return title;
+  return rankFor(level).title;
+}
+
+/** Dictionary key for the rank title at this level. */
+export function rankTitleKey(level: number): MessageKey {
+  return rankFor(level).key;
 }
 
 export function levelProgress(totalXp: number): LevelProgress {
@@ -48,9 +61,11 @@ export function levelProgress(totalXp: number): LevelProgress {
   return {
     level,
     title: rankTitle(level),
+    titleKey: rankTitleKey(level),
     xpIntoLevel: totalXp - start,
     xpForNextLevel: next - start,
     nextTitle: rankTitle(level + 1),
+    nextTitleKey: rankTitleKey(level + 1),
   };
 }
 

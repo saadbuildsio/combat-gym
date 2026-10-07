@@ -1,8 +1,8 @@
 import type { CurriculumLevel } from "@/domain/types";
 
 /**
- * The six-level Boxing path. Levels 1-2 are written for the MVP;
- * Levels 3-6 show as locked "coming soon" until their content is ready.
+ * The six-level Boxing path. Each level opens with enough XP once the level before it is complete.
+ * A level with contentReady: false shows as "coming soon".
  */
 export const BOXING_LEVELS: CurriculumLevel[] = [
   {
@@ -30,8 +30,40 @@ export const BOXING_LEVELS: CurriculumLevel[] = [
     unlockXp: 300,
     contentReady: true,
   },
-  { sport: "boxing", level: 3, title: "Combinations", goal: "Link punches into fluent combinations.", lessonIds: [], unlockXp: 1200, contentReady: false },
-  { sport: "boxing", level: 4, title: "Defense", goal: "High guard, slip, roll, parry and distance.", lessonIds: [], unlockXp: 2500, contentReady: false },
-  { sport: "boxing", level: 5, title: "Combined Training", goal: "Move, strike and defend together.", lessonIds: [], unlockXp: 4500, contentReady: false },
-  { sport: "boxing", level: 6, title: "Fight IQ", goal: "Distance, timing, counters and reading opponents.", lessonIds: [], unlockXp: 7000, contentReady: false },
+  {
+    sport: "boxing",
+    level: 3,
+    title: "Combinations",
+    goal: "Link punches into fluent combinations.",
+    lessonIds: ["boxing-one-two", "boxing-jab-cross-hook", "boxing-body-shots", "boxing-uppercut-hook-combos"],
+    unlockXp: 1200,
+    contentReady: true,
+  },
+  {
+    sport: "boxing",
+    level: 4,
+    title: "Defense",
+    goal: "High guard, slip, roll, parry and pull back.",
+    lessonIds: ["boxing-block", "boxing-slip", "boxing-roll", "boxing-parry", "boxing-pull-back"],
+    unlockXp: 2500,
+    contentReady: true,
+  },
+  {
+    sport: "boxing",
+    level: 5,
+    title: "Combined Training",
+    goal: "Move, strike and defend together.",
+    lessonIds: ["boxing-pivot", "boxing-punch-and-move", "boxing-defend-and-counter", "boxing-cutting-angles"],
+    unlockXp: 4500,
+    contentReady: true,
+  },
+  {
+    sport: "boxing",
+    level: 6,
+    title: "Fight IQ",
+    goal: "Distance, timing, counters and reading opponents.",
+    lessonIds: ["boxing-distance", "boxing-feints-timing", "boxing-counter-punching", "boxing-ring-control"],
+    unlockXp: 7000,
+    contentReady: true,
+  },
 ];

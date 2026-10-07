@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { AppShell } from "@/components/app-shell";
 import { FightIQMatch } from "@/components/block-runner";
+import { useT } from "@/components/language-provider";
 import { useProfile } from "@/components/profile-provider";
 import { SessionResults } from "@/components/session-results";
 import { getOpponent } from "@/content/boxing/opponents";
@@ -22,6 +23,7 @@ export function FightClient({ id }: { id: string }) {
 /** A standalone Fight IQ match against one opponent. */
 function Fight({ opponentId, profile }: { opponentId: string; profile: PlayerProfile }) {
   const { saveProfile } = useProfile();
+  const t = useT();
   const [skillsBefore] = useState<SkillRatings>(() => profile.skills);
   const [outcome, setOutcome] = useState<SessionOutcome | null>(null);
   const opponent = getOpponent(opponentId);
@@ -37,9 +39,9 @@ function Fight({ opponentId, profile }: { opponentId: string; profile: PlayerPro
   if (!opponent || !allowed) {
     return (
       <p className="text-muted">
-        This opponent is locked.{" "}
+        {t("fighters.locked")}{" "}
         <Link href="/fighters" className="text-accent">
-          Back to fighters
+          {t("fighters.backToFighters")}
         </Link>
       </p>
     );
@@ -62,7 +64,7 @@ function Fight({ opponentId, profile }: { opponentId: string; profile: PlayerPro
   return (
     <div className="mx-auto max-w-lg">
       <Link href="/fighters" className="text-sm font-semibold text-muted hover:text-foreground">
-        ‹ Fighters
+        {t("fighters.back")}
       </Link>
       <div className="mt-6">
         <FightIQMatch opponentId={opponent.id} drillId="fightiq-opponent" onDone={done} />

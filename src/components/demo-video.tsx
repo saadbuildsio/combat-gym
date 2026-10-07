@@ -54,14 +54,14 @@ export function DemoVideo({ id, title, playing, leads = false }: { id: string; t
             muted
             loop
             preload="metadata"
-            aria-label={`Demo: ${title}`}
+            aria-label={t("video.demoLabel", { title })}
           />
         ) : (
           <iframe
             ref={frameRef}
             className="h-full w-full"
             src={`https://www.youtube-nocookie.com/embed/${encodeURIComponent(video.src)}?rel=0&modestbranding=1&playsinline=1&enablejsapi=1${video.skipTo ? `&start=${video.skipTo}` : ""}`}
-            title={`Demo: ${title}`}
+            title={t("video.demoLabel", { title })}
             loading="lazy"
             allow="autoplay; encrypted-media; picture-in-picture"
             allowFullScreen

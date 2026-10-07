@@ -1,6 +1,7 @@
 "use client";
 
 import { AppShell } from "@/components/app-shell";
+import { useT } from "@/components/language-provider";
 import { ButtonLink, Card, ProgressBar, SectionTitle } from "@/components/ui";
 import { missionsFor, type Mission } from "@/domain/missions";
 import type { PlayerProfile } from "@/domain/types";
@@ -14,24 +15,26 @@ function Challenges({ profile }: { profile: PlayerProfile }) {
   const missions = missionsFor(profile.history, todayKey());
   const daily = missions.filter((m) => m.period === "daily");
   const weekly = missions.filter((m) => m.period === "weekly");
+  const t = useT();
 
   return (
     <div className="space-y-5">
       <div>
-        <p className="text-xs font-bold uppercase tracking-widest text-muted">Challenges</p>
-        <h1 className="text-3xl font-black">🎯 Missions</h1>
-        <p className="mt-1 text-muted">Daily missions reset at midnight. Weekly challenges reset on Monday.</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted">{t("missions.eyebrow")}</p>
+        <h1 className="text-3xl font-black">{t("missions.title")}</h1>
+        <p className="mt-1 text-muted">{t("missions.intro")}</p>
       </div>
-      <MissionList title="Today" missions={daily} />
-      <MissionList title="This week" missions={weekly} />
+      <MissionList title={t("missions.today")} missions={daily} />
+      <MissionList title={t("missions.thisWeek")} missions={weekly} />
       <ButtonLink href="/train/session" className="w-full">
-        Start training
+        {t("common.startTraining")}
       </ButtonLink>
     </div>
   );
 }
 
 function MissionList({ title, missions }: { title: string; missions: Mission[] }) {
+  const t = useT();
   return (
     <Card>
       <SectionTitle>{title}</SectionTitle>
@@ -41,7 +44,7 @@ function MissionList({ title, missions }: { title: string; missions: Mission[] }
             <div className="flex items-baseline justify-between">
               <span className={`font-semibold ${m.done ? "text-good" : ""}`}>
                 {m.done ? "✓ " : ""}
-                {m.title}
+                {t(m.title)}
               </span>
               <span className="text-sm tabular-nums text-muted">
                 {m.progress}/{m.target}
