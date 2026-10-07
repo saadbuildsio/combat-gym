@@ -34,6 +34,16 @@ function BoxingPath({ profile }: { profile: PlayerProfile }) {
         <ButtonLink href="/train/session">Start training</ButtonLink>
       </Card>
 
+      <Link href="/train/moves" className="flex items-center justify-between rounded-2xl bg-surface p-5 hover:bg-surface-2">
+        <span>
+          <span className="block text-lg font-bold">🥊 Move library</span>
+          <span className="text-sm text-muted">Watch every punch and step, in slow motion too.</span>
+        </span>
+        <span aria-hidden className="text-2xl text-muted">
+          ›
+        </span>
+      </Link>
+
       <ol className="space-y-4">
         {BOXING_LEVELS.map((level) => {
           const unlocked = level.contentReady && profile.totalXp >= level.unlockXp;

@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Button, ProgressBar } from "@/components/ui";
+import { calloutName, movesForCallout } from "@/content/boxing/moves";
+import { getDemoVideo } from "@/content/boxing/videos";
 import { scoreConditioning } from "@/domain/scoring";
 import type { Drill } from "@/domain/types";
 import { speak, stopSpeaking } from "@/lib/speech";
-import type { DrillProps } from "./types";
-import { getDemoVideo } from "@/content/boxing/videos";
 import { DemoVideo } from "../demo-video";
+import { MoveAnimation } from "../move-animation";
+import type { DrillProps } from "./types";
 
 interface TimedRoundProps extends DrillProps {
   drill: Drill;
@@ -27,6 +29,7 @@ interface TimedRoundProps extends DrillProps {
 
 /**
  * Follow-along round with a countdown and spoken callouts.
+ * Shadow rounds show our animated fighter throwing each called move, so the picture always matches the callout.
  * We cannot see the user, so this only tracks time completed (and effort if asked).
  */
 export function TimedRound({ drill, callouts, calloutEvery, randomOrder, scoreEffort, followVideo = false, onDone, onPain }: TimedRoundProps) {
@@ -37,9 +40,12 @@ export function TimedRound({ drill, callouts, calloutEvery, randomOrder, scoreEf
   const [running, setRunning] = useState(false);
   const [voice, setVoice] = useState(true);
   const [callout, setCallout] = useState<string>("Get in your stance");
+  const [calloutCount, setCalloutCount] = useState(0);
   const [askingEffort, setAskingEffort] = useState(false);
-  const [showExample, setShowExample] = useState(true);
+  const [showExample, setShowExample] = useState(false);
   const calloutIndex = useRef(0);
+  /** Second of the round when the next callout is due. Skip and repeat move it. */
+  const nextCalloutAt = useRef(0);
   const voiceRef = useRef(voice);
   useEffect(() => {
     voiceRef.current = voice;
@@ -53,15 +59,27 @@ export function TimedRound({ drill, callouts, calloutEvery, randomOrder, scoreEf
     return () => clearInterval(timer);
   }, [running, finished]);
 
-  // New callout every `calloutEvery` seconds while running.
-  useEffect(() => {
-    if (videoLeads || !running || finished || elapsed % calloutEvery !== 0) return;
+  const say = (text: string) => {
+    if (voiceRef.current) speak(calloutName(text));
+  };
+
+  const nextCallout = (at: number) => {
     const next = randomOrder
       ? callouts[Math.floor(Math.random() * callouts.length)]
       : callouts[calloutIndex.current++ % callouts.length];
     setCallout(next);
-    if (voiceRef.current) speak(next);
-  }, [elapsed, running, finished, calloutEvery, callouts, randomOrder, videoLeads]);
+    setCalloutCount((c) => c + 1);
+    nextCalloutAt.current = at + calloutEvery;
+    say(next);
+  };
+
+  // A new callout every `calloutEvery` seconds while running.
+  useEffect(() => {
+    if (videoLeads || !running || finished || elapsed < nextCalloutAt.current) return;
+    nextCallout(elapsed);
+    // nextCallout only reads refs and props that are stable during a round.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [elapsed, running, finished, videoLeads]);
 
   useEffect(() => stopSpeaking, []);
 
@@ -92,9 +110,13 @@ export function TimedRound({ drill, callouts, calloutEvery, randomOrder, scoreEf
     else complete();
   };
 
+  const pain = () => {
+    stopSpeaking();
+    onPain({ drillId: drill.id, kind: drill.kind, completed: false, scores: {}, reportedPain: true });
+  };
+
   const remaining = total - elapsed;
-  const mm = Math.floor(remaining / 60);
-  const ss = String(remaining % 60).padStart(2, "0");
+  const clock = formatClock(remaining);
 
   if (askingEffort || (finished && scoreEffort)) {
     return (
@@ -116,74 +138,200 @@ export function TimedRound({ drill, callouts, calloutEvery, randomOrder, scoreEf
     );
   }
 
-  return (
-    <div className="text-center">
-      <p className="text-sm text-muted">{drill.description}</p>
-      {/* The video stays mounted for the whole round, so starting the timer never makes it disappear. */}
-      {videoLeads ? (
+  if (videoLeads) {
+    return (
+      <div className="text-center">
+        <p className="text-sm text-muted">{drill.description}</p>
+        {/* The video stays mounted for the whole round, so starting the timer never makes it disappear. */}
         <div className="mt-4">
           {/* At "Time" the video keeps playing; the user may finish it before tapping Next. */}
           <DemoVideo id={drill.id} title={drill.title} playing={running || finished} leads />
           <p className="mt-1 text-xs text-muted">Start and Pause also control the video. If it does not start, tap play on the video.</p>
         </div>
-      ) : (
-        hasVideo && (
-          <div className="mt-4">
-            <div className={showExample ? "" : "hidden"}>
-              <DemoVideo id={drill.id} title={drill.title} playing={showExample ? undefined : false} />
-              <p className="mt-1 text-xs font-semibold">Example only. In this round, follow the app&apos;s callouts.</p>
-            </div>
-            <Button variant="ghost" onClick={() => setShowExample((v) => !v)}>
-              {showExample ? "Hide example video" : "Show example video"}
+        <p className="mt-6 font-mono text-6xl font-black tabular-nums" aria-live="off">
+          {clock}
+        </p>
+        <ProgressBar value={elapsed} max={total} className="mt-4" />
+        <p className="mt-8 min-h-16 text-3xl font-black text-accent" aria-live="polite">
+          {finished ? "Time. Finish the video if you like, then tap Next." : "Follow the video"}
+        </p>
+        <div className="mt-8 flex flex-col gap-3">
+          {finished ? (
+            <Button onClick={() => complete()}>Next</Button>
+          ) : (
+            <Button onClick={() => setRunning((r) => !r)}>{running ? "Pause" : elapsed > 0 ? "Resume" : "Start"}</Button>
+          )}
+          {!finished && elapsed > 0 && (
+            <Button variant="secondary" onClick={end}>
+              Finish round
+            </Button>
+          )}
+          <div className="flex justify-between">
+            <Button variant="ghost" onClick={() => setVoice((v) => !v)}>
+              {voice ? "🔊 Voice on" : "🔇 Voice off"}
+            </Button>
+            <Button variant="danger" onClick={pain}>
+              I feel pain
             </Button>
           </div>
-        )
-      )}
-      <p className="mt-6 font-mono text-6xl font-black tabular-nums" aria-live="off">
-        {mm}:{ss}
-      </p>
-      <ProgressBar value={elapsed} max={total} className="mt-4" />
-      <p className="mt-8 min-h-16 text-3xl font-black text-accent" aria-live="polite">
-        {videoLeads
-          ? finished
-            ? "Time. Finish the video if you like, then tap Next."
-            : "Follow the video"
-          : running || finished
-            ? callout
-            : "Press start when you are ready"}
-      </p>
+        </div>
+      </div>
+    );
+  }
 
-      <div className="mt-8 flex flex-col gap-3">
+  // Round screen: callout on top, the move animated under it, then counters, ring timer and controls.
+  const started = running || elapsed > 0;
+  const moves = started ? movesForCallout(callout) : (["guard"] as const);
+  const title = finished ? "Time" : started ? calloutName(callout) : "Get in your stance";
+
+  return (
+    <div>
+      <h2 className="flex min-h-12 items-center gap-3 border-l-4 border-accent pl-3 text-3xl font-black leading-tight" aria-live="polite">
+        {title}
+      </h2>
+
+      <div className="mt-3">
+        {moves.length > 0 ? (
+          <MoveAnimation moves={[...moves]} playKey={calloutCount} />
+        ) : (
+          <p className="rounded-2xl bg-surface-2 p-6 text-center text-muted">{drill.description}</p>
+        )}
+      </div>
+
+      <div className="mt-2 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <div className="text-center">
+          <p className="text-xs uppercase tracking-widest text-muted">Callouts</p>
+          <p className="mt-1 inline-block rounded-full border border-surface-3 px-3 font-mono text-sm font-bold">{calloutCount}</p>
+          <button
+            type="button"
+            className="mt-2 block w-full text-xl"
+            onClick={() => setVoice((v) => !v)}
+            aria-label={voice ? "Turn voice off" : "Turn voice on"}
+          >
+            {voice ? "🔊" : "🔇"}
+          </button>
+        </div>
+        <RingTimer clock={clock} planned={formatClock(total)} value={elapsed} max={total} />
+        <div className="text-center">
+          <p className="text-xs uppercase tracking-widest text-muted">Every</p>
+          <p className="mt-1 inline-block rounded-full border border-surface-3 px-3 font-mono text-sm font-bold">{calloutEvery}s</p>
+          {hasVideo && (
+            <button type="button" className="mt-2 block w-full text-xl" onClick={() => setShowExample((v) => !v)} aria-label="Show example video">
+              🎬
+            </button>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 flex items-center justify-center gap-6">
+        <RoundButton
+          label="Repeat this callout"
+          disabled={!running}
+          onClick={() => {
+            nextCalloutAt.current = elapsed + calloutEvery;
+            setCalloutCount((c) => c + 1);
+            say(callout);
+          }}
+        >
+          ⟲
+        </RoundButton>
         {finished ? (
           <Button onClick={() => complete()}>Next</Button>
         ) : (
-          <Button
-            onClick={() => {
-              if (!running && elapsed === 0 && !videoLeads) setShowExample(false);
-              setRunning((r) => !r);
-            }}
-          >{running ? "Pause" : elapsed > 0 ? "Resume" : "Start"}</Button>
+          <RoundButton big label={running ? "Pause" : elapsed > 0 ? "Resume" : "Start"} onClick={() => setRunning((r) => !r)}>
+            {running ? "❚❚" : "▶"}
+          </RoundButton>
         )}
-        {!finished && elapsed > 0 && (
+        <RoundButton label="Next callout now" disabled={!running} onClick={() => nextCallout(elapsed)}>
+          ⏭
+        </RoundButton>
+      </div>
+      <p className="mt-2 text-center text-xs text-muted">{started ? "" : "Press play when you are ready"}</p>
+
+      {hasVideo && (
+        // Kept mounted when hidden, so it does not restart; paused whenever it is hidden.
+        <div className={showExample ? "mt-4" : "hidden"}>
+          <DemoVideo id={drill.id} title={drill.title} playing={showExample ? undefined : false} />
+          <p className="mt-1 text-xs font-semibold">Example only. In this round, follow the app&apos;s callouts.</p>
+        </div>
+      )}
+
+      <div className="mt-6 flex justify-between">
+        {!finished && elapsed > 0 ? (
           <Button variant="secondary" onClick={end}>
             Finish round
           </Button>
+        ) : (
+          <span />
         )}
-        <div className="flex justify-between">
-          <Button variant="ghost" onClick={() => setVoice((v) => !v)}>
-            {voice ? "🔊 Voice on" : "🔇 Voice off"}
-          </Button>
-          <Button
-            variant="danger"
-            onClick={() => {
-              stopSpeaking();
-              onPain({ drillId: drill.id, kind: drill.kind, completed: false, scores: {}, reportedPain: true });
-            }}
-          >
-            I feel pain
-          </Button>
-        </div>
+        <Button variant="danger" onClick={pain}>
+          I feel pain
+        </Button>
       </div>
     </div>
+  );
+}
+
+function formatClock(seconds: number): string {
+  const s = Math.max(0, seconds);
+  return `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+}
+
+function RingTimer({ clock, planned, value, max }: { clock: string; planned: string; value: number; max: number }) {
+  const r = 70;
+  const circumference = 2 * Math.PI * r;
+  const left = max > 0 ? 1 - Math.min(1, value / max) : 0;
+  return (
+    <div className="relative size-36" role="timer" aria-label={`${clock} left`}>
+      <svg viewBox="0 0 160 160" className="size-full -rotate-90">
+        <circle cx="80" cy="80" r={r} fill="none" stroke="var(--surface-2)" strokeWidth="8" />
+        <circle
+          cx="80"
+          cy="80"
+          r={r}
+          fill="none"
+          stroke="var(--accent)"
+          strokeWidth="8"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - left)}
+          className="transition-[stroke-dashoffset] duration-1000 ease-linear"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-mono text-3xl font-black tabular-nums">{clock}</span>
+        <span className="mt-1 h-0.5 w-10 bg-accent" />
+        <span className="mt-1 font-mono text-sm text-muted">{planned}</span>
+      </div>
+    </div>
+  );
+}
+
+function RoundButton({
+  children,
+  label,
+  big = false,
+  disabled = false,
+  onClick,
+}: {
+  children: React.ReactNode;
+  label: string;
+  big?: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      title={label}
+      disabled={disabled}
+      onClick={onClick}
+      className={`flex items-center justify-center rounded-full font-black transition disabled:opacity-30 ${
+        big ? "size-20 bg-accent text-2xl text-white" : "size-14 bg-surface-2 text-xl"
+      }`}
+    >
+      {children}
+    </button>
   );
 }
