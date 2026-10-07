@@ -2,7 +2,7 @@ import { getDemoVideo } from "@/content/boxing/videos";
 
 /**
  * Shows the demo video for a lesson or drill.
- * Until a coach-approved clip exists, shows a clear "coming soon" placeholder instead of an unverified video.
+ * With no video, shows a "coming soon" placeholder. Unreviewed YouTube placeholders carry a notice.
  */
 export function DemoVideo({ id, title }: { id: string; title: string }) {
   const video = getDemoVideo(id);
@@ -45,7 +45,10 @@ export function DemoVideo({ id, title }: { id: string; title: string }) {
           />
         )}
       </div>
-      {video.credit && <figcaption className="mt-1 text-xs text-muted">Video: {video.credit}</figcaption>}
+      <figcaption className="mt-1 text-xs text-muted">
+        {video.credit && <>Video: {video.credit}. </>}
+        {!video.coachReviewed && "Not yet checked by a Combat Gym coach. If it differs from our written steps, follow the steps."}
+      </figcaption>
     </figure>
   );
 }

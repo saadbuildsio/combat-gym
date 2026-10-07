@@ -9,11 +9,16 @@ describe("demo videos", () => {
     for (const key of Object.keys(DEMO_VIDEOS)) expect(ids.has(key), key).toBe(true);
   });
 
-  it("hide clips a coach has not approved", () => {
-    DEMO_VIDEOS["boxing-jab"] = { kind: "file", src: "/videos/jab.mp4", coachReviewed: false };
-    expect(getDemoVideo("boxing-jab")).toBeUndefined();
-    DEMO_VIDEOS["boxing-jab"].coachReviewed = true;
-    expect(getDemoVideo("boxing-jab")?.src).toBe("/videos/jab.mp4");
-    delete DEMO_VIDEOS["boxing-jab"];
+  it("hide our own clips until a coach approves them, but show YouTube placeholders", () => {
+    DEMO_VIDEOS["recall-combos"] = { kind: "file", src: "/videos/recall.mp4", coachReviewed: false };
+    expect(getDemoVideo("recall-combos")).toBeUndefined();
+    DEMO_VIDEOS["recall-combos"].coachReviewed = true;
+    expect(getDemoVideo("recall-combos")?.src).toBe("/videos/recall.mp4");
+    delete DEMO_VIDEOS["recall-combos"];
+    expect(getDemoVideo("boxing-jab")?.kind).toBe("youtube");
+  });
+
+  it("cover every Level 1-2 lesson", () => {
+    for (const lesson of BOXING_LESSONS) expect(getDemoVideo(lesson.id), lesson.id).toBeDefined();
   });
 });
