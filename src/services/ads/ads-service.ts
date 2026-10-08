@@ -10,6 +10,9 @@ const isAndroid = () => Capacitor.getPlatform() === "android";
 
 let started: Promise<boolean> | null = null;
 
+/** Where ad start-up got to, for the test-build status line. */
+export let adsStage = "not started";
+
 async function admob() {
   return (await import("@capacitor-community/admob")).AdMob;
 }
@@ -22,48 +25,69 @@ export function startAds(): Promise<boolean> {
       const AdMob = await admob();
       const { MaxAdContentRating } = await import("@capacitor-community/admob");
       // Our players are 16+: keep ads to the Teen rating at most. Gambling, dating and alcohol are blocked in the AdMob dashboard.
+      adsStage = "initializing";
       await AdMob.initialize({ initializeForTesting: ADS_ARE_TEST, maxAdContentRating: MaxAdContentRating.Teen });
+      adsStage = "checking consent";
       const consent = await AdMob.requestConsentInfo();
       if (consent.isConsentFormAvailable && !consent.canRequestAds) {
+        adsStage = "consent form";
         const after = await AdMob.showConsentForm();
+        adsStage = after.canRequestAds ? "ready" : "no consent";
         return after.canRequestAds;
       }
+      adsStage = consent.canRequestAds ? "ready" : `consent says no ads (${consent.status})`;
       return consent.canRequestAds;
-    } catch {
+    } catch (error) {
       // No ads is always a safe fallback.
+      adsStage = `start failed: ${String((error as Error)?.message ?? error)}`;
       return false;
     }
   })();
   return started;
 }
 
-export async function showBanner(): Promise<boolean> {
-  if (!(await startAds())) return false;
-  try {
+let bannerCreated = false;
+let bannerChain: Promise<unknown> = Promise.resolve();
+
+/**
+ * One banner for the whole app: pages say whether they want it, and calls run one after another,
+ * so leaving one page and opening the next never races (hide, then show again).
+ */
+export function setBannerWanted(wanted: boolean): Promise<boolean> {
+  const next = bannerChain.then(async () => {
+    if (!(await startAds())) return false;
     const AdMob = await admob();
-    const { BannerAdPosition, BannerAdSize } = await import("@capacitor-community/admob");
-    await AdMob.showBanner({
-      adId: ADMOB_BANNER_ID,
-      isTesting: ADS_ARE_TEST,
-      adSize: BannerAdSize.ADAPTIVE_BANNER,
-      position: BannerAdPosition.BOTTOM_CENTER,
-      // Sit just above our bottom navigation bar instead of covering it.
-      margin: BOTTOM_NAV_HEIGHT_DP,
-    });
-    return true;
-  } catch {
-    return false;
-  }
+    try {
+      if (!wanted) {
+        if (bannerCreated) await AdMob.hideBanner();
+        return true;
+      }
+      if (bannerCreated) {
+        await AdMob.resumeBanner();
+        return true;
+      }
+      const { BannerAdPosition, BannerAdSize } = await import("@capacitor-community/admob");
+      await AdMob.showBanner({
+        adId: ADMOB_BANNER_ID,
+        isTesting: ADS_ARE_TEST,
+        adSize: BannerAdSize.ADAPTIVE_BANNER,
+        position: BannerAdPosition.BOTTOM_CENTER,
+        // Sit just above our bottom navigation bar instead of covering it.
+        margin: BOTTOM_NAV_HEIGHT_DP,
+      });
+      bannerCreated = true;
+      return true;
+    } catch (error) {
+      lastBannerError = String((error as Error)?.message ?? error);
+      return false;
+    }
+  });
+  bannerChain = next.catch(() => false);
+  return next;
 }
 
-export async function removeBanner(): Promise<void> {
-  if (!isAndroid()) return;
-  try {
-    await (await admob()).removeBanner();
-  } catch {
-    // ignore
-  }
-}
+/** Last error from showing the banner, for the test-build status line. */
+export let lastBannerError = "";
 
 export async function showInterstitial(): Promise<boolean> {
   if (!(await startAds())) return false;

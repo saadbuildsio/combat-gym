@@ -28,6 +28,7 @@ jobs:
       NEXT_PUBLIC_REVENUECAT_ANDROID_KEY: ${{ vars.NEXT_PUBLIC_REVENUECAT_ANDROID_KEY }}
       VERSION_CODE: ${{ github.run_number }}
       VERSION_NAME: 1.0.${{ github.run_number }}
+      NEXT_PUBLIC_BUILD_NUMBER: ${{ github.run_number }}
       # Secrets cannot be read in step conditions, so expose only whether signing is set up.
       HAS_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
     steps:
