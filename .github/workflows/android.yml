@@ -14,6 +14,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# Lets the build publish the test app as a direct download (a GitHub release), so phones get a plain .apk, not a zip.
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -73,6 +77,17 @@ jobs:
         with:
           name: combat-gym-test-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
+
+      - name: Publish test app as a direct download
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cp android/app/build/outputs/apk/debug/app-debug.apk combat-gym-test.apk
+          gh release delete test-app --yes --cleanup-tag 2>/dev/null || true
+          gh release create test-app combat-gym-test.apk --prerelease --target "$GITHUB_SHA" \
+            --title "Combat Gym test app (build ${{ github.run_number }})" \
+            --notes "Latest test build for Android phones. Tap combat-gym-test.apk to download, then open it to install. Uses test ads."
 
       - name: Build Google Play bundle
         if: ${{ env.HAS_KEYSTORE == 'true' }}
