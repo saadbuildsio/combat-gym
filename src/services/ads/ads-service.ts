@@ -13,8 +13,13 @@ let started: Promise<boolean> | null = null;
 /** Where ad start-up got to, for the test-build status line. */
 export let adsStage = "not started";
 
-async function admob() {
-  return (await import("@capacitor-community/admob")).AdMob;
+/**
+ * Loads the AdMob plugin. Wrapped in an object on purpose: Capacitor plugins answer every property,
+ * including `then`, so returning the plugin itself from an async function makes the await hang forever.
+ */
+async function loadAdmob() {
+  const { AdMob } = await import("@capacitor-community/admob");
+  return { AdMob };
 }
 
 /** Starts AdMob once: asks for privacy consent where the law requires it, then initialises. Returns whether ads may load. */
@@ -22,7 +27,7 @@ export function startAds(): Promise<boolean> {
   if (!isAndroid()) return Promise.resolve(false);
   started ??= (async () => {
     try {
-      const AdMob = await admob();
+      const { AdMob } = await loadAdmob();
       const { MaxAdContentRating } = await import("@capacitor-community/admob");
       // Our players are 16+: keep ads to the Teen rating at most. Gambling, dating and alcohol are blocked in the AdMob dashboard.
       adsStage = "initializing";
@@ -56,7 +61,7 @@ let bannerChain: Promise<unknown> = Promise.resolve();
 export function setBannerWanted(wanted: boolean): Promise<boolean> {
   const next = bannerChain.then(async () => {
     if (!(await startAds())) return false;
-    const AdMob = await admob();
+    const { AdMob } = await loadAdmob();
     try {
       if (!wanted) {
         if (bannerCreated) await AdMob.hideBanner();
@@ -92,7 +97,7 @@ export let lastBannerError = "";
 export async function showInterstitial(): Promise<boolean> {
   if (!(await startAds())) return false;
   try {
-    const AdMob = await admob();
+    const { AdMob } = await loadAdmob();
     await AdMob.prepareInterstitial({ adId: ADMOB_INTERSTITIAL_ID, isTesting: ADS_ARE_TEST });
     await AdMob.showInterstitial();
     return true;
@@ -106,7 +111,7 @@ export type BannerStatus = { state: "loading" } | { state: "loaded"; heightDp: n
 /** Reports whether the banner really loaded, so the page only leaves room for it when it is there (and test builds can show why not). */
 export async function watchBanner(onStatus: (status: BannerStatus) => void): Promise<() => void> {
   if (!isAndroid()) return () => {};
-  const AdMob = await admob();
+  const { AdMob } = await loadAdmob();
   const { BannerAdPluginEvents } = await import("@capacitor-community/admob");
   onStatus({ state: "loading" });
   const handles = await Promise.all([
