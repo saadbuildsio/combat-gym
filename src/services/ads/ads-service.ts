@@ -76,3 +76,20 @@ export async function showInterstitial(): Promise<boolean> {
     return false;
   }
 }
+
+export type BannerStatus = { state: "loading" } | { state: "loaded"; heightDp: number } | { state: "failed"; reason: string };
+
+/** Reports whether the banner really loaded, so the page only leaves room for it when it is there (and test builds can show why not). */
+export async function watchBanner(onStatus: (status: BannerStatus) => void): Promise<() => void> {
+  if (!isAndroid()) return () => {};
+  const AdMob = await admob();
+  const { BannerAdPluginEvents } = await import("@capacitor-community/admob");
+  onStatus({ state: "loading" });
+  const handles = await Promise.all([
+    AdMob.addListener(BannerAdPluginEvents.SizeChanged, (size) => {
+      if (size.height > 0) onStatus({ state: "loaded", heightDp: size.height });
+    }),
+    AdMob.addListener(BannerAdPluginEvents.FailedToLoad, (error) => onStatus({ state: "failed", reason: `${error.code}: ${error.message}` })),
+  ]);
+  return () => handles.forEach((h) => void h.remove());
+}
